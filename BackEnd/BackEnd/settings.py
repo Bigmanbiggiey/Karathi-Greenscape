@@ -157,3 +157,10 @@ SIMPLE_JWT = {
 }
 
 AUTH_USER_MODEL = "Auth.CustomUser"
+
+# MPesa Sandbox / Production settings
+MPESA_CONSUMER_KEY = "0uIRCid8LtZKc3W3fnRWCGZznK7pDEtiNLYKqqJyviupHAwK"
+MPESA_CONSUMER_SECRET = "2bLTBBPbiSBjd7OhkeIGBYNxCQt21A1cZuo97GRGJ3Q6XjLIqadCZI9wGF9nLwKW"
+MPESA_SHORTCODE = "174379"  # sandbox shortcode
+MPESA_PASSKEY = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
+MPESA_CALLBACK_URL = "https://yourdomain.com/api/payment/payments/callback/"
