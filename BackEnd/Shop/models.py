@@ -34,7 +34,7 @@ class Order(models.Model):
         ("cancelled", "Cancelled"),
     ]
 
-    user = models.ForeignKey("Auth.User", on_delete=models.CASCADE, related_name="orders")
+    user = models.ForeignKey("Auth.CustomUser", on_delete=models.CASCADE, related_name="orders")
     products = models.ManyToManyField(Product, through="OrderItem")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     total_price = models.DecimalField(max_digits=10, decimal_places=2)

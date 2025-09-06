@@ -11,7 +11,7 @@ router.register("orders", OrderViewSet, basename="order")
 router.register("audit-logs", AuditLogViewSet, basename="auditlog")
 
 urlpatterns = [
-    path(("", include(router.urls))),
+    path("", include(router.urls)),
     # Products
     path("products/", ProductListCreateView.as_view(), name="product-list"),
     path("products/<int:pk>/", ProductDetailView.as_view(), name="product-detail"),

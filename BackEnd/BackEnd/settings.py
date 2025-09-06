@@ -97,9 +97,9 @@ WSGI_APPLICATION = 'BackEnd.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresl',
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'KARATHI_GREENSCAPE_DB',
-        'USER': 'Postgres',
+        'USER': 'postgres',
         'PASSWORD': '0000',
         'HOST': 'localhost',
         'PORT': '5433',
