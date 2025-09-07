@@ -9,7 +9,7 @@ const About = () => {
       className="min-h-screen flex flex-col items-center justify-center bg-white text-black px-6 py-16"
     >
       {/* Typing animation heading */}
-      <h2 className="text-4xl md:text-5xl font-bold mb-10">
+      <h2 className="text-4xl md:text-5xl font-bold mb-10 ">
         <span>
           About Me: 
         </span>
@@ -32,7 +32,7 @@ const About = () => {
           wrapper="span"
           speed={35}
           repeat={Infinity}
-          className="text-3xl md:text-3xl font-medium text-red-400"
+          className="text-3xl md:text-3xl font-medium text-indigo-400"
         />
       </h2>
 
@@ -43,7 +43,7 @@ const About = () => {
           <span className="text-green-400 font-semibold">self-taught developer</span>{" "}
           with <span className="text-yellow-600 font-semibold">2 years of hands-on experience</span>{" "}
           building practical and impactful solutions. My journey began as a{" "}
-          <span className="text-red-400 font-semibold">Network Engineer</span>, where I delivered{" "}
+          <span className="text-indigo-400 font-semibold">Network Engineer</span>, where I delivered{" "}
           <span className="italic">internet installations, CCTV setups, access control systems,</span>{" "}
           and more. It was during this time that I discovered{" "}
           <span className="text-blue-400 font-semibold">Python</span>, and I’ve been hooked ever since.
