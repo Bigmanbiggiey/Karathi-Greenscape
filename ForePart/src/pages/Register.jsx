@@ -33,7 +33,7 @@ export default function Register() {
 
       <form
         onSubmit={handleSubmit}
-        className="flex flex-col max-w-md mx-auto gap-4"
+        className="flex flex-col max-w-md mx-auto gap-4 pt-15"
       >
         <input
           type="text"
