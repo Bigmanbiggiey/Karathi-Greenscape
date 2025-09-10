@@ -1,16 +1,18 @@
-// src/pages/CartAndCheckout.jsx
 import React, { useState, useContext } from "react";
 import { Title, Meta } from "react-head";
 import { AuthContext } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 
 const CartAndCheckout = () => {
-  const { authTokens } = useContext(AuthContext);
+  const { accessToken } = useContext(AuthContext);
   const { cart, updateQuantity, removeItem, subtotal } = useCart();
 
   const [phone, setPhone] = useState("");
   const [processing, setProcessing] = useState(false);
   const [message, setMessage] = useState("");
+
+  // Use environment variable for API base URL
+  const API_URL = import.meta.env.VITE_API_URL;
 
   // Checkout handler
   const handleCheckout = async (e) => {
@@ -19,28 +21,23 @@ const CartAndCheckout = () => {
     setMessage("");
 
     try {
-      const response = await fetch(
-        "http://localhost:8000/api/payment/stkpush/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authTokens?.access}`,
-          },
-          body: JSON.stringify({
-            phone_number: phone,
-            amount: subtotal,
-            order_id: 1, // TODO: dynamically link to actual order
-          }),
-        }
-      );
+      const response = await fetch(`${API_URL}/api/payment/stkpush/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          phone_number: phone,
+          amount: subtotal,
+          order_id: 1, // TODO: dynamically link to actual order
+        }),
+      });
 
       if (!response.ok) throw new Error("Failed to initiate payment");
 
       await response.json();
-      setMessage(
-        `STK Push sent to ${phone}. Check your phone to complete payment.`
-      );
+      setMessage(`STK Push sent to ${phone}. Check your phone to complete payment.`);
     } catch (error) {
       setMessage("Payment initiation failed. Try again.");
       console.error("Checkout error:", error);
@@ -51,7 +48,6 @@ const CartAndCheckout = () => {
 
   return (
     <div className="max-w-5xl mx-auto p-6 grid md:grid-cols-2 gap-8">
-      {/* SEO Head */}
       <Title>Cart & Checkout | Karathi Greenscape</Title>
       <Meta
         name="description"
@@ -79,9 +75,7 @@ const CartAndCheckout = () => {
                     type="number"
                     min="1"
                     value={item.quantity}
-                    onChange={(e) =>
-                      updateQuantity(item.id, Number(e.target.value))
-                    }
+                    onChange={(e) => updateQuantity(item.id, e.target.value)}
                     className="w-16 px-2 py-1 border rounded"
                   />
                   <button

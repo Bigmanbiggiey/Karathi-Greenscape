@@ -40,7 +40,7 @@ class PaymentViewSet(viewsets.ModelViewSet):
             amount=int(order.total_amount),
             account_reference=f"Order{order.id}",
             transaction_desc="Order Payment",
-            callback_url=callback_url
+            callback_url=callback_url,
         )
 
         return Response({

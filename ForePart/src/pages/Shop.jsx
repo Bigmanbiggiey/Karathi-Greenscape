@@ -4,6 +4,8 @@ import { Title, Meta } from "react-head";
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE = import.meta.env.VITE_API_URL; // 🔗 Use environment variable
+
 const Shop = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,7 +18,7 @@ const Shop = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/shop/products/");
+        const res = await fetch(`${API_BASE}/api/shop/products/`);
         if (!res.ok) throw new Error("Failed to load products");
         const data = await res.json();
         setProducts(data);

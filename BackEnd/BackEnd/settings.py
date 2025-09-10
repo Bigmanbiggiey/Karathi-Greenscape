@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
+import os
 from pathlib import Path
 from datetime import timedelta
 
@@ -29,7 +29,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    ".ngrok.io",
+    "b02fc1833648.ngrok-free.app",
 ]
 
 
@@ -167,4 +167,4 @@ MPESA_CONSUMER_KEY = "0uIRCid8LtZKc3W3fnRWCGZznK7pDEtiNLYKqqJyviupHAwK"
 MPESA_CONSUMER_SECRET = "2bLTBBPbiSBjd7OhkeIGBYNxCQt21A1cZuo97GRGJ3Q6XjLIqadCZI9wGF9nLwKW"
 MPESA_SHORTCODE = "174379"  # sandbox shortcode
 MPESA_PASSKEY = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
-MPESA_CALLBACK_URL = "https://yourdomain.com/api/payment/payments/callback/"
+MPESA_CALLBACK_URL = os.getenv("https://b02fc1833648.ngrok-free.app/api/payment/payments/callback/")

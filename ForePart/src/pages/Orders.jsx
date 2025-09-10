@@ -4,17 +4,19 @@ import { Title, Meta } from "react-head";
 import { AuthContext } from "../context/AuthContext";
 import OrderStatusBadge from "../components/OrderStatusBadge";
 
+const API_BASE = import.meta.env.VITE_API_URL; // 🔗 Use environment variable
+
 const Orders = () => {
-  const { token } = useContext(AuthContext);
+  const { accessToken } = useContext(AuthContext);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/shop/orders/", {
+        const res = await fetch(`${API_BASE}/api/shop/orders/`, {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${accessToken}`,
           },
         });
 
@@ -29,8 +31,8 @@ const Orders = () => {
       }
     };
 
-    if (token) fetchOrders();
-  }, [token]);
+    if (accessToken) fetchOrders();
+  }, [accessToken]);
 
   if (loading) {
     return (

@@ -2,10 +2,14 @@
 import React, { useContext, useState } from "react";
 import { Title, Meta } from "react-head";
 import { AuthContext } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function Register() {
   const { signup } = useContext(AuthContext);
+  const navigate = useNavigate();
+
   const [form, setForm] = useState({
+    username: "",        // <-- Added username
     first_name: "",
     last_name: "",
     email: "",
@@ -17,6 +21,7 @@ export default function Register() {
     try {
       await signup(form);
       alert("Registration successful! You can now log in.");
+      navigate("/login");
     } catch (err) {
       alert(err.message);
     }
@@ -24,7 +29,6 @@ export default function Register() {
 
   return (
     <>
-      {/* SEO Head */}
       <Title>Register - Karathi Greenscape</Title>
       <Meta
         name="description"
@@ -35,6 +39,14 @@ export default function Register() {
         onSubmit={handleSubmit}
         className="flex flex-col max-w-md mx-auto gap-4 pt-15"
       >
+        <input
+          type="text"
+          placeholder="Username"
+          value={form.username}
+          onChange={(e) => setForm({ ...form, username: e.target.value })}
+          required
+          className="p-2 border rounded"
+        />
         <input
           type="text"
           placeholder="First Name"

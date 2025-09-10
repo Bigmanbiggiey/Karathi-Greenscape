@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { AuthContext } from "./AuthContext";
 
-const API_BASE = "http://localhost:8000/api/auth"; // 🔗 update for production
+// Use environment variable for API base URL
+const API_BASE = `${import.meta.env.VITE_API_URL}/api/auth`;
 
 export default function AuthProvider({ children }) {
   const [user, setUser] = useState(() =>
@@ -15,6 +16,26 @@ export default function AuthProvider({ children }) {
     localStorage.getItem("refreshToken")
   );
   const [loading, setLoading] = useState(true);
+
+  // 🟢 Logout (memoized so it's stable)
+  const logout = useCallback(async () => {
+    try {
+      await fetch(`${API_BASE}/logout/`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+
+    setAccessToken(null);
+    setRefreshToken(null);
+    setUser(null);
+
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
+  }, [accessToken]);
 
   // 🟢 Refresh Token function
   const refreshTokenFunc = useCallback(async () => {
@@ -35,7 +56,7 @@ export default function AuthProvider({ children }) {
     setAccessToken(data.access);
     localStorage.setItem("accessToken", data.access);
     setLoading(false);
-  }, [refreshToken]);
+  }, [refreshToken, logout]);
 
   // 🟢 Refresh token on app load
   useEffect(() => {
@@ -54,15 +75,15 @@ export default function AuthProvider({ children }) {
       refreshTokenFunc();
     }, 4 * 60 * 1000); // every 4 minutes
 
-    return () => clearInterval(interval); // cleanup on unmount
+    return () => clearInterval(interval);
   }, [refreshToken, refreshTokenFunc]);
 
   // 🟢 Register
-  const signup = async ({ first_name, last_name, email, password }) => {
+  const signup = async ({ username, first_name, last_name, email, password }) => {
     const res = await fetch(`${API_BASE}/register/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ first_name, last_name, email, password }),
+      body: JSON.stringify({ username, first_name, last_name, email, password }),
     });
 
     if (!res.ok) throw new Error("Registration failed");
@@ -89,26 +110,6 @@ export default function AuthProvider({ children }) {
     localStorage.setItem("user", JSON.stringify(data.user));
 
     return data.user;
-  };
-
-  // 🟢 Logout
-  const logout = async () => {
-    try {
-      await fetch(`${API_BASE}/logout/`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
-
-    setAccessToken(null);
-    setRefreshToken(null);
-    setUser(null);
-
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("user");
   };
 
   return (
