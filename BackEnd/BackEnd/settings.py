@@ -158,6 +158,8 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ("Bearer",),
+    "USER_ID_FIELD": "user_id",      # match your primary key
+    "USER_ID_CLAIM": "user_id",
 }
 
 AUTH_USER_MODEL = "Auth.CustomUser"
