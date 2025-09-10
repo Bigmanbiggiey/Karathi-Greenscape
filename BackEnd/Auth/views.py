@@ -19,12 +19,9 @@ class LoginView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        username = serializer.validated_data["username"]
-        password = serializer.validated_data["password"]
 
-        user = authenticate(username=username, password=password)
-        if not user:
-            return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+        # Get user from serializer validate() method
+        user = serializer.validated_data["user"]
 
         refresh = RefreshToken.for_user(user)
         return Response({
@@ -32,6 +29,7 @@ class LoginView(APIView):
             "access": str(refresh.access_token),
             "user": UserSerializer(user).data,
         })
+
 
 class ProfileView(APIView):
     def get(self, request):
