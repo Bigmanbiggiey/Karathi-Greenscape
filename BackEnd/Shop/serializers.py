@@ -1,28 +1,41 @@
 from rest_framework import serializers
-from .models import Product, Order, OrderItem, AuditLog
+from .models import Product, ProductVariant, Order, OrderItem, AuditLog
+
+
+class ProductVariantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductVariant
+        fields = ["id", "product", "price", "stock"]
+
 
 class ProductSerializer(serializers.ModelSerializer):
+    variants = ProductVariantSerializer(many=True, read_only=True)
+
     class Meta:
         model = Product
-        fields = "__all__"
+        fields = ["id", "name", "description", "category", "variants", "created_at"]
+
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    product = ProductSerializer(read_only=True)
-    product_id = serializers.PrimaryKeyRelatedField(
-        queryset=Product.objects.all(), source="product", write_only=True
+    variant = ProductVariantSerializer(read_only=True)
+    variant_id = serializers.PrimaryKeyRelatedField(
+        queryset=ProductVariant.objects.all(),
+        source="variant",
+        write_only=True,
     )
 
     class Meta:
         model = OrderItem
-        fields = ["id", "product", "product_id", "quantity"]
+        fields = ["id", "variant", "variant_id", "quantity"]
+
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True)
 
     class Meta:
         model = Order
-        fields = ["id", "user", "products", "status", "total_price" "created_at"]
-        read_only_fields = ["id","user", "total_price", "created_at" "status"]
+        fields = ["id", "user", "items", "status", "total_price", "created_at"]
+        read_only_fields = ["id", "user", "total_price", "created_at", "status"]
 
     def create(self, validated_data):
         items_data = validated_data.pop("items")
@@ -31,10 +44,12 @@ class OrderSerializer(serializers.ModelSerializer):
             OrderItem.objects.create(order=order, **item)
         return order
 
+
 class RestockSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Product
-        fields = ["id", "name", "stock"]
+        model = ProductVariant
+        fields = ["id", "product", "price", "stock"]
+
 
 class AuditLogSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField()

@@ -18,13 +18,22 @@ class Product(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    stock = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.name} ({self.category})"
-    
+
+
+class ProductVariant(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="variants")
+    size = models.CharField(max_length=100, blank=True, help_text="E.g. Small, Medium, 2ft, 3ft")
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    stock = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.product.name} - {self.size or 'Default'} @ {self.price}"
+
+
 class Order(models.Model):
     STATUS_CHOICES = [
         ("pending", "Pending"),
@@ -35,29 +44,31 @@ class Order(models.Model):
     ]
 
     user = models.ForeignKey("Auth.CustomUser", on_delete=models.CASCADE, related_name="orders")
-    products = models.ManyToManyField(Product, through="OrderItem")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
-    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Order #{self.id} - {self.user} - {self.status}"
-    
+
+
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
 
     def __str__(self):
-        return f"{self.quantity} * {self.product.name}"
-    
+        return f"{self.quantity} * {self.variant.product.name} ({self.variant.size})"
+
+
 @receiver(post_save, sender=Order)
 def handle_order_status_change(sender, instance, **kwargs):
     if instance.status == "completed":
         for item in instance.items.all():
-            if item.product.stock >= item.quantity:
-                item.product.stock -= item.quantity
-                item.product.save()
+            if item.variant.stock >= item.quantity:
+                item.variant.stock -= item.quantity
+                item.variant.save()
+
 
 class AuditLog(models.Model):
     ACTION_TYPES = [
