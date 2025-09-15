@@ -1,20 +1,25 @@
 from django.contrib import admin
-from .models import Product, Order, OrderItem, AuditLog
+from .models import Product, ProductVariant, Order, OrderItem, AuditLog
 
 
-# Inline OrderItem so you can manage items inside an Order
-class OrderItemInline(admin.TabularInline):
-    model = OrderItem
+class ProductVariantInline(admin.TabularInline):
+    model = ProductVariant
     extra = 1
-    autocomplete_fields = ["product"]
 
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "category", "price", "stock", "created_at")
+    list_display = ("id", "name", "category", "created_at")
     list_filter = ("category", "created_at")
     search_fields = ("name", "description")
     ordering = ("-created_at",)
+    inlines = [ProductVariantInline]
+
+
+class OrderItemInline(admin.TabularInline):
+    model = OrderItem
+    extra = 1
+    autocomplete_fields = ["variant"]
 
 
 @admin.register(Order)
@@ -28,9 +33,17 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):
-    list_display = ("id", "order", "product", "quantity")
-    search_fields = ("order__id", "product__name")
-    autocomplete_fields = ["order", "product"]
+    list_display = ("id", "order", "variant", "quantity")
+    search_fields = ("order__id", "variant__product__name")
+    autocomplete_fields = ["order", "variant"]
+
+
+@admin.register(ProductVariant)
+class ProductVariantAdmin(admin.ModelAdmin):
+    list_display = ("id", "product", "size", "price", "stock")
+    search_fields = ("product__name", "size")
+    list_filter = ("product__category",)
+    ordering = ("-id",)
 
 
 @admin.register(AuditLog)
