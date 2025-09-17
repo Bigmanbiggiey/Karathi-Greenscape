@@ -1,26 +1,25 @@
-from rest_framework import generics, status
+from rest_framework import generics, status, viewsets, mixins, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.contrib.auth import authenticate
+from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework.permissions import IsAuthenticated
 
 from .serializers import RegisterSerializer, UserSerializer, LoginSerializer
-from django.contrib.auth import get_user_model
+from .permissions import IsAdminOrSelf
 
 User = get_user_model()
+
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
 
+
 class LoginView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        # Get user from serializer validate() method
         user = serializer.validated_data["user"]
 
         refresh = RefreshToken.for_user(user)
@@ -32,10 +31,12 @@ class LoginView(APIView):
 
 
 class ProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
-        user = request.user
-        return Response(UserSerializer(user).data)
-    
+        return Response(UserSerializer(request.user).data)
+
+
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -47,3 +48,21 @@ class LogoutView(APIView):
             return Response({"detail": "Successfully logged out."}, status=status.HTTP_205_RESET_CONTENT)
         except Exception:
             return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# --- User Management Endpoint with Role Restrictions ---
+class UserViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet
+):
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated, IsAdminOrSelf]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.user_type == "admin":
+            return User.objects.all()
+        return User.objects.filter(id=user.id)  # Non-admins see only themselves
