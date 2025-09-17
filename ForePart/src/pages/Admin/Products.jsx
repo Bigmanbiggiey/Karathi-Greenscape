@@ -1,7 +1,6 @@
 // src/pages/admin/ProductsAdmin.jsx
 import React, { useEffect, useState } from "react";
-import api from "../../api"; // <-- adjust path if different
-
+import api from "@/api"; 
 const ProductsAdmin = () => {
   const [products, setProducts] = useState([]);
   const [variants, setVariants] = useState([]);

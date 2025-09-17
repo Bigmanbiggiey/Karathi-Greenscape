@@ -17,6 +17,12 @@ import CartAndCheckout from "./pages/CartAndCheckout";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Logout from "./pages/Logout";
+// Admin Pages
+import Dashboard from './pages/Admin/Dashboard';
+import Orders from './pages/Admin/Orders';
+import Products from './pages/Admin/Products';
+import Users from './pages/Admin/Users';
+import Vendors from './pages/Admin/Vendors';
 
 function App() {
   return (
@@ -36,6 +42,11 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/logout" element={<Logout />} />
+                <Route path="/dashboard" element={<Dashboard />}/>
+                <Route path="/orders" element={<Orders />}/>
+                <Route path="/products" element={<Products />}/>
+                <Route path="/users" element={<Users />}/>
+                <Route path="/vendors" element={<Vendors />}/>
               </Routes>
             </main>
 

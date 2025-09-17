@@ -1,6 +1,6 @@
 // src/pages/admin/OrdersAdmin.jsx
 import React, { useEffect, useState } from "react";
-import api from "../../api"; // adjust path if needed
+import api from "@/api"; 
 
 const OrdersAdmin = () => {
   const [orders, setOrders] = useState([]);
