@@ -4,12 +4,13 @@ import { Title, Meta } from "react-head";
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 
-const API_BASE = import.meta.env.VITE_API_URL; // 🔗 Use environment variable
+import { API_BASE } from "../config";
 
 const Shop = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedVariants, setSelectedVariants] = useState({}); // track per product
 
   const { addToCart } = useCart();
   const navigate = useNavigate();
@@ -30,6 +31,19 @@ const Shop = () => {
     };
     fetchProducts();
   }, []);
+
+  const handleVariantChange = (productId, variant) => {
+    setSelectedVariants((prev) => ({ ...prev, [productId]: variant }));
+  };
+
+  const handleAddToCart = (product) => {
+    const variant = selectedVariants[product.id];
+    if (!variant) {
+      alert("Please select a variant first.");
+      return;
+    }
+    addToCart({ ...product, selectedVariant: variant });
+  };
 
   if (loading) return <p className="text-center py-10">Loading products...</p>;
   if (error) return <p className="text-center py-10 text-red-600">{error}</p>;
@@ -68,20 +82,43 @@ const Shop = () => {
 
               <h2 className="font-semibold text-lg mb-2">{product.name}</h2>
               <p className="text-gray-600 text-sm flex-grow">{product.description}</p>
+
+              {/* Variant Selector */}
+              {product.variants && product.variants.length > 0 && (
+                <select
+                  className="mt-3 border rounded-lg p-2"
+                  value={selectedVariants[product.id] || ""}
+                  onChange={(e) => handleVariantChange(product.id, e.target.value)}
+                >
+                  <option value="">Choose a variant</option>
+                  {product.variants.map((variant) => (
+                    <option key={variant.id} value={variant.id}>
+                      {variant.name} – KES{" "}
+                      {typeof variant.price === "number"
+                        ? variant.price.toLocaleString()
+                        : "N/A"}
+                    </option>
+                  ))}
+                </select>
+              )}
+
               <p className="text-green-700 font-bold mt-3">
-                KES {product.price.toLocaleString()}
+                From KES{" "}
+                {typeof product.price === "number"
+                  ? product.price.toLocaleString()
+                  : "N/A"}
               </p>
 
               <div className="mt-4 flex gap-2">
                 <button
-                  onClick={() => addToCart(product)}
+                  onClick={() => handleAddToCart(product)}
                   className="flex-1 py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
                 >
                   Add to Cart
                 </button>
                 <button
                   onClick={() => {
-                    addToCart(product);
+                    handleAddToCart(product);
                     navigate("/cart");
                   }}
                   className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
