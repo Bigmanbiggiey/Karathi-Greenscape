@@ -18,11 +18,11 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Logout from "./pages/Logout";
 // Admin Pages
-import Dashboard from './pages/Admin/Dashboard';
-import Orders from './pages/Admin/Orders';
-import Products from './pages/Admin/Products';
-import Users from './pages/Admin/Users';
-import Vendors from './pages/Admin/Vendors';
+import Dashboard from './pages/Dashboard-Admin';
+import Orders from './pages/Orders-Admin';
+import Products from './pages/Products-Admin';
+import Users from './pages/Users-Admin';
+import Vendors from './pages/Vendors-Admin';
 
 function App() {
   return (

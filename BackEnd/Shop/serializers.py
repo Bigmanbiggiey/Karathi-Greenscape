@@ -1,3 +1,4 @@
+# shop/serializers.py
 from rest_framework import serializers
 from .models import Product, ProductVariant, Order, OrderItem, AuditLog
 
@@ -40,20 +41,18 @@ class OrderSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         items_data = validated_data.pop("items")
         order = Order.objects.create(**validated_data)
+
+        total_price = 0
         for item in items_data:
-            OrderItem.objects.create(order=order, **item)
+            variant = item["variant"]
+            quantity = item["quantity"]
+            OrderItem.objects.create(order=order, variant=variant, quantity=quantity)
+            total_price += variant.price * quantity
+
+        order.total_price = total_price
+        order.save()
         return order
 
+    def update(self, instance, validated_data):
+        items_data = validated_data.pop("items", None)
 
-class RestockSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProductVariant
-        fields = ["id", "product", "price", "stock"]
-
-
-class AuditLogSerializer(serializers.ModelSerializer):
-    user = serializers.StringRelatedField()
-
-    class Meta:
-        model = AuditLog
-        fields = "__all__"

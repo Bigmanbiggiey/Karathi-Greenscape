@@ -1,6 +1,6 @@
 // src/pages/admin/Vendor.jsx
 import React, { useEffect, useState } from "react";
-import api from "@/api"; 
+import api from "../api/api"; 
 
 const Vendor = () => {
   const [vendors, setVendors] = useState([]);
