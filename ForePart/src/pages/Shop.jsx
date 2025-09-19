@@ -1,4 +1,4 @@
-// src/pages/Shop.jsx
+
 import React, { useEffect, useState } from "react";
 import { Title, Meta } from "react-head";
 import { useCart } from "../context/CartContext";
