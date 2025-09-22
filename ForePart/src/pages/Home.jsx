@@ -84,30 +84,76 @@ const Home = () => {
             Featured Products
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { name: "Indoor Plants", desc: "Perfect for homes and offices." },
-              { name: "Outdoor Shrubs", desc: "Ideal for landscaping projects." },
-              { name: "Flowering Plants", desc: "Brighten up any space with color." },
-            ].map((product, idx) => (
-              <div
-                key={idx}
-                className="bg-white shadow rounded-2xl p-6 hover:shadow-lg transition text-center"
-              >
-                <div className="h-40 bg-green-100 rounded-xl mb-4 flex items-center justify-center">
-                  <span className="text-2xl text-green-800">🌱</span>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {product.name}
-                </h3>
-                <p className="text-gray-600">{product.desc}</p>
-                <Link
-                  to="/shop"
-                  className="mt-4 inline-block px-4 py-2 bg-green-700 text-white rounded-lg shadow hover:bg-green-800 transition"
-                >
-                  View More
-                </Link>
+            {/* Indoor Plants */}
+            <div className="bg-white shadow rounded-2xl p-6 hover:shadow-lg transition text-center">
+              <div className="h-40 bg-green-100 rounded-xl mb-4 flex items-center justify-center">
+                <span className="text-3xl">🏡</span>
               </div>
-            ))}
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Indoor Plants
+              </h3>
+              <p className="text-gray-600 mb-2">
+                Perfect for homes and offices.
+              </p>
+              <ul className="text-gray-700 text-sm">
+                <li>• Duranta – Ksh 50</li>
+                <li>• Geranium – Ksh 100</li>
+              </ul>
+              <Link
+                to="/shop"
+                className="mt-4 inline-block px-4 py-2 bg-green-700 text-white rounded-lg shadow hover:bg-green-800 transition"
+              >
+                View More
+              </Link>
+            </div>
+
+            {/* Outdoor Shrubs */}
+            <div className="bg-white shadow rounded-2xl p-6 hover:shadow-lg transition text-center">
+              <div className="h-40 bg-green-100 rounded-xl mb-4 flex items-center justify-center">
+                <span className="text-3xl">🌳</span>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Outdoor Shrubs
+              </h3>
+              <p className="text-gray-600 mb-2">
+                Ideal for landscaping and garden borders.
+              </p>
+              <ul className="text-gray-700 text-sm">
+                <li>• Bougainvillea – Ksh 50</li>
+                <li>• Croton – Ksh 500</li>
+                <li>• Hibiscus – Ksh 200</li>
+              </ul>
+              <Link
+                to="/shop"
+                className="mt-4 inline-block px-4 py-2 bg-green-700 text-white rounded-lg shadow hover:bg-green-800 transition"
+              >
+                View More
+              </Link>
+            </div>
+
+            {/* Flowering Plants */}
+            <div className="bg-white shadow rounded-2xl p-6 hover:shadow-lg transition text-center">
+              <div className="h-40 bg-green-100 rounded-xl mb-4 flex items-center justify-center">
+                <span className="text-3xl">🌸</span>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Flowering Plants
+              </h3>
+              <p className="text-gray-600 mb-2">
+                Brighten up any space with vibrant blooms.
+              </p>
+              <ul className="text-gray-700 text-sm">
+                <li>• Bolsam – Ksh 200</li>
+                <li>• Hibiscus – Ksh 200</li>
+                <li>• Geranium – Ksh 100</li>
+              </ul>
+              <Link
+                to="/shop"
+                className="mt-4 inline-block px-4 py-2 bg-green-700 text-white rounded-lg shadow hover:bg-green-800 transition"
+              >
+                View More
+              </Link>
+            </div>
           </div>
         </div>
       </section>
