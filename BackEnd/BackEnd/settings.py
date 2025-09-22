@@ -29,7 +29,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    "b02fc1833648.ngrok-free.app",
+    "a979c98bb4d7.ngrok-free.app",
 ]
 
 
@@ -55,9 +55,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -73,7 +73,14 @@ REST_FRAMEWORK = {
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_HEADERS = ['*']
-CORS_ALLOW_METHODS = ['GET', 'POST', 'OPTIONS']
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
 
 ROOT_URLCONF = 'BackEnd.urls'
 
@@ -169,4 +176,4 @@ MPESA_CONSUMER_KEY = "0uIRCid8LtZKc3W3fnRWCGZznK7pDEtiNLYKqqJyviupHAwK"
 MPESA_CONSUMER_SECRET = "2bLTBBPbiSBjd7OhkeIGBYNxCQt21A1cZuo97GRGJ3Q6XjLIqadCZI9wGF9nLwKW"
 MPESA_SHORTCODE = "174379"  # sandbox shortcode
 MPESA_PASSKEY = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
-MPESA_CALLBACK_URL = os.getenv("https://b02fc1833648.ngrok-free.app/api/payment/payments/callback/")
+MPESA_CALLBACK_URL = os.getenv("https://a979c98bb4d7.ngrok-free.app /api/payment/payments/callback/")

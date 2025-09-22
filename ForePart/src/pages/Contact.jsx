@@ -51,59 +51,6 @@ const Contact = () => {
         </p>
       </section>
 
-      {/* Map Selectors */}
-      <section className="max-w-4xl mx-auto px-6 py-12">
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <button
-            onClick={() => setActiveMap("kitengela")}
-            className={`p-4 text-center font-semibold rounded-xl shadow-md transition ${
-              activeMap === "kitengela"
-                ? "bg-green-700 text-white"
-                : "bg-white text-green-700 border border-green-700 hover:bg-green-50"
-            }`}
-          >
-            Kitengela Branch
-          </button>
-          <button
-            onClick={() => setActiveMap("nairobi")}
-            className={`p-4 text-center font-semibold rounded-xl shadow-md transition ${
-              activeMap === "nairobi"
-                ? "bg-green-700 text-white"
-                : "bg-white text-green-700 border border-green-700 hover:bg-green-50"
-            }`}
-          >
-            Nairobi Branch
-          </button>
-        </div>
-
-        {/* Map Display */}
-        <div className="w-full h-96 rounded-xl overflow-hidden shadow-md">
-          {activeMap === "kitengela" ? (
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1995.067541273377!2d36.9591212!3d-1.476193!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182f05a1a63d507f%3A0x92f6c08e3f7c502!2sKitengela!5e0!3m2!1sen!2ske!4v1694200000000!5m2!1sen!2ske"
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              allowFullScreen=""
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              title="Kitengela Map"
-            ></iframe>
-          ) : (
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3988.859013063741!2d36.821946!3d-1.292066!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182f10c715e5b7d7%3A0x96e7c6539e9f3b6c!2sNairobi!5e0!3m2!1sen!2ske!4v1694200000000!5m2!1sen!2ske"
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              allowFullScreen=""
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              title="Nairobi Map"
-            ></iframe>
-          )}
-        </div>
-      </section>
-
       {/* Contact Info + Form */}
       <section className="max-w-6xl mx-auto px-6 py-12 grid md:grid-cols-2 gap-12">
         {/* Contact Information */}
@@ -117,13 +64,13 @@ const Contact = () => {
           </p>
           <div className="space-y-4">
             <p>
-              📍 <strong>Location:</strong> Kitengela, Kenya
+              📍 <strong>Locations:</strong> Head Office: Kitengela - Along Nairobi Namanga Highway, Opp Riverside Hotel <br /> Branches: Kimalat, kitengela and Kamangu, Limuru.
             </p>
             <p>
-              📞 <strong>Phone:</strong> +254 712 345 678
+              📞 <strong>Phone:</strong> +254 742 127 811
             </p>
             <p>
-              📧 <strong>Email:</strong> info@karathigreenscape.com
+              📧 <strong>Email:</strong> danielnduatimurigi@gmail.com
             </p>
           </div>
         </div>
@@ -205,6 +152,61 @@ const Contact = () => {
           )}
         </div>
       </section>
+
+      {/* Map Selectors */}
+      <section className="max-w-4xl mx-auto px-6 py-12">
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <button
+            onClick={() => setActiveMap("kitengela")}
+            className={`p-4 text-center font-semibold rounded-xl shadow-md transition ${
+              activeMap === "kitengela"
+                ? "bg-green-700 text-white"
+                : "bg-white text-green-700 border border-green-700 hover:bg-green-50"
+            }`}
+          >
+            Kitengela Branch
+          </button>
+          <button
+            onClick={() => setActiveMap("nairobi")}
+            className={`p-4 text-center font-semibold rounded-xl shadow-md transition ${
+              activeMap === "nairobi"
+                ? "bg-green-700 text-white"
+                : "bg-white text-green-700 border border-green-700 hover:bg-green-50"
+            }`}
+          >
+            Limuru Branch
+          </button>
+        </div>
+
+        {/* Map Display */}
+        <div className="w-full h-96 rounded-xl overflow-hidden shadow-md">
+          {activeMap === "kitengela" ? (
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d296.44435331992986!2d36.95463980705027!3d-1.4929641360481618!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182fa029a32ea761%3A0x1b98a0c9cee3a824!2sKitengela!5e0!3m2!1sen!2ske!4v1758527751462!5m2!1sen!2ske" 
+              height="100%"
+              width="100%"
+              style={{ border: 0 }}
+              allowFullScreen=""
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Kitengela Map"
+            ></iframe>
+          ) : (
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m16!1m12!1m3!1d15955.53944709092!2d36.58767862243058!3d-1.2394158951520282!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!2m1!1sKamangu%20limuru!5e0!3m2!1sen!2ske!4v1758527970254!5m2!1sen!2ske" 
+              height="100%"
+              width="100%"
+              style={{ border: 0 }}
+              allowFullScreen=""
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Nairobi Map"
+            ></iframe>
+          )}
+        </div>
+      </section>
+
+      
     </div>
   );
 };

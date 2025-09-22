@@ -41,9 +41,9 @@ const Footer = () => {
           {/* Contact Info */}
           <div>
             <h3 className="text-md font-semibold mb-2">Contact Us</h3>
-            <p className="text-sm">📍 Kitengela, Kenya</p>
-            <p className="text-sm">📞 +254 700 123 456</p>
-            <p className="text-sm">✉️ info@karathigreenscape.com</p>
+            <p className="text-sm">📍 Kitengela & Limuru, Kenya</p>
+            <p className="text-sm">📞 +254 742 127 811</p>
+            <p className="text-sm">✉️ danielnduatimurigi@gmail.com</p>
           </div>
         </div>
 

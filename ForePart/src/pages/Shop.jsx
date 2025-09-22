@@ -10,12 +10,11 @@ const Shop = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedVariants, setSelectedVariants] = useState({}); // track per product
+  const [selectedVariants, setSelectedVariants] = useState({});
 
   const { addToCart } = useCart();
   const navigate = useNavigate();
 
-  // Fetch products from backend
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -57,7 +56,7 @@ const Shop = () => {
         content="Browse eco-friendly products from Karathi Greenscape. Add items to your cart or purchase instantly with secure M-Pesa checkout."
       />
 
-      <h1 className="text-3xl font-bold mb-8">Our Products</h1>
+      <h1 className="text-3xl font-bold mb-8 text-emerald-900">Our Products</h1>
 
       {products.length === 0 ? (
         <p className="text-gray-600">No products available right now.</p>
@@ -66,7 +65,7 @@ const Shop = () => {
           {products.map((product) => (
             <div
               key={product.id}
-              className="border rounded-xl shadow-sm hover:shadow-lg transition p-4 flex flex-col"
+              className="border border-gray-200 bg-white rounded-xl shadow-sm hover:shadow-md transition p-4 flex flex-col"
             >
               {product.image ? (
                 <img
@@ -80,13 +79,13 @@ const Shop = () => {
                 </div>
               )}
 
-              <h2 className="font-semibold text-lg mb-2">{product.name}</h2>
-              <p className="text-gray-600 text-sm flex-grow">{product.description}</p>
+              <h2 className="font-semibold text-lg mb-2 text-emerald-800">{product.name}</h2>
+              <p className="text-gray-700 text-sm flex-grow">{product.description}</p>
 
               {/* Variant Selector */}
               {product.variants && product.variants.length > 0 && (
                 <select
-                  className="mt-3 border rounded-lg p-2"
+                  className="mt-3 border border-gray-300 rounded-lg p-2 focus:ring-emerald-500 focus:border-emerald-500"
                   value={selectedVariants[product.id] || ""}
                   onChange={(e) => handleVariantChange(product.id, e.target.value)}
                 >
@@ -102,17 +101,22 @@ const Shop = () => {
                 </select>
               )}
 
-              <p className="text-green-700 font-bold mt-3">
-                From KES{" "}
-                {typeof product.price === "number"
-                  ? product.price.toLocaleString()
-                  : "N/A"}
+              {/* Price Display */}
+              <p className="font-bold mt-3">
+                From{" "}
+                {typeof product.price === "number" ? (
+                  <span className="text-emerald-700">
+                    {product.price.toLocaleString()} Ksh
+                  </span>
+                ) : (
+                  <span className="text-gray-500 italic">N/A</span>
+                )}
               </p>
 
               <div className="mt-4 flex gap-2">
                 <button
                   onClick={() => handleAddToCart(product)}
-                  className="flex-1 py-2 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                  className="flex-1 py-2 px-4 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
                 >
                   Add to Cart
                 </button>
@@ -121,7 +125,7 @@ const Shop = () => {
                     handleAddToCart(product);
                     navigate("/cart");
                   }}
-                  className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                  className="flex-1 py-2 px-4 bg-amber-400 text-white rounded-lg hover:bg-amber-600 transition"
                 >
                   Buy Now
                 </button>

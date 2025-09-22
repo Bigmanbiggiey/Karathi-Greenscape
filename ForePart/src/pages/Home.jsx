@@ -96,8 +96,8 @@ const Home = () => {
                 Perfect for homes and offices.
               </p>
               <ul className="text-gray-700 text-sm">
-                <li>• Duranta – Ksh 50</li>
-                <li>• Geranium – Ksh 100</li>
+                <li>• Duranta</li>
+                <li>• Geranium</li>
               </ul>
               <Link
                 to="/shop"
@@ -119,9 +119,9 @@ const Home = () => {
                 Ideal for landscaping and garden borders.
               </p>
               <ul className="text-gray-700 text-sm">
-                <li>• Bougainvillea – Ksh 50</li>
-                <li>• Croton – Ksh 500</li>
-                <li>• Hibiscus – Ksh 200</li>
+                <li>• Bougainvillea</li>
+                <li>• Croton</li>
+                <li>• Hibiscus</li>
               </ul>
               <Link
                 to="/shop"
@@ -143,9 +143,9 @@ const Home = () => {
                 Brighten up any space with vibrant blooms.
               </p>
               <ul className="text-gray-700 text-sm">
-                <li>• Bolsam – Ksh 200</li>
-                <li>• Hibiscus – Ksh 200</li>
-                <li>• Geranium – Ksh 100</li>
+                <li>• Bolsam</li>
+                <li>• Hibiscus</li>
+                <li>• Geranium</li>
               </ul>
               <Link
                 to="/shop"
