@@ -28,6 +28,9 @@ const Navbar = () => {
             <Link to="/contact" className="hover:text-yellow-300">
               Contact
             </Link>
+            <Link to="/profile" className="hover:text-yellow-300">
+              Profile
+            </Link>
             <Link to="/cart" className="flex items-center hover:text-yellow-300">
               <ShoppingCart className="h-5 w-5 mr-1" /> Cart
             </Link>
@@ -82,6 +85,9 @@ const Navbar = () => {
           </Link>
           <Link to="/cart" className="block hover:text-yellow-300">
             Cart
+          </Link>
+          <Link to="/profile" className="block hover:text-yellow-300">
+            Profile
           </Link>
         </div>
       )}

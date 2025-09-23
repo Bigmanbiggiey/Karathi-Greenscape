@@ -9,6 +9,7 @@ class CustomUser(AbstractUser):
         default="customer",
     )
     user_id = models.AutoField(primary_key=True)
+    billing_address = models.TextField(blank=True, null=True)
 
     REQUIRED_FIELDS = ["email"]
     USERNAME_FIELD = "username"

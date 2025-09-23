@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 
-from .serializers import RegisterSerializer, UserSerializer, LoginSerializer
+from .serializers import RegisterSerializer, UserSerializer, LoginSerializer, ProfileSerializer
 from .permissions import IsAdminOrSelf
 
 User = get_user_model()
@@ -30,7 +30,8 @@ class LoginView(APIView):
         })
 
 
-class ProfileView(APIView):
+class ProfileView(generics.RetrieveUpdateAPIView):
+    serializer_class = ProfileSerializer
     permission_classes = [IsAuthenticated]
 
     def get(self, request):

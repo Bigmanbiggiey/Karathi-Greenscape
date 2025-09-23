@@ -2,22 +2,19 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { AuthContext } from "./AuthContext";
 
-// Use environment variable for API base URL
 const API_BASE = `${import.meta.env.VITE_API_URL}/api/auth`;
 
 export default function AuthProvider({ children }) {
   const [user, setUser] = useState(() =>
     JSON.parse(localStorage.getItem("user"))
   );
-  const [accessToken, setAccessToken] = useState(
-    localStorage.getItem("accessToken")
-  );
-  const [refreshToken, setRefreshToken] = useState(
-    localStorage.getItem("refreshToken")
-  );
+  const [accessToken, setAccessToken] = useState(localStorage.getItem("accessToken"));
+  const [refreshToken, setRefreshToken] = useState(localStorage.getItem("refreshToken"));
   const [loading, setLoading] = useState(true);
 
-  // 🟢 Logout (memoized so it's stable)
+  const isAuthenticated = !!accessToken;
+
+  // 🟢 Logout
   const logout = useCallback(async () => {
     try {
       await fetch(`${API_BASE}/logout/`, {
@@ -37,7 +34,7 @@ export default function AuthProvider({ children }) {
     localStorage.removeItem("user");
   }, [accessToken]);
 
-  // 🟢 Refresh Token function
+  // 🟢 Refresh token
   const refreshTokenFunc = useCallback(async () => {
     if (!refreshToken) return;
 
@@ -58,7 +55,7 @@ export default function AuthProvider({ children }) {
     setLoading(false);
   }, [refreshToken, logout]);
 
-  // 🟢 Refresh token on app load
+  // 🟢 On load
   useEffect(() => {
     if (refreshToken) {
       refreshTokenFunc();
@@ -67,23 +64,19 @@ export default function AuthProvider({ children }) {
     }
   }, [refreshToken, refreshTokenFunc]);
 
-  // 🟢 Auto-refresh every 4 minutes
+  // 🟢 Auto refresh
   useEffect(() => {
     if (!refreshToken) return;
-
-    const interval = setInterval(() => {
-      refreshTokenFunc();
-    }, 4 * 60 * 1000); // every 4 minutes
-
+    const interval = setInterval(refreshTokenFunc, 4 * 60 * 1000);
     return () => clearInterval(interval);
   }, [refreshToken, refreshTokenFunc]);
 
   // 🟢 Register
-  const signup = async ({ username, first_name, last_name, email, password }) => {
+  const signup = async ({ username, email, password, user_type = "customer", billing_address = "" }) => {
     const res = await fetch(`${API_BASE}/register/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, first_name, last_name, email, password }),
+      body: JSON.stringify({ username, email, password, user_type, billing_address }),
     });
 
     if (!res.ok) throw new Error("Registration failed");
@@ -114,7 +107,7 @@ export default function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, accessToken, refreshToken, loading, signup, login, logout }}
+      value={{ user, isAuthenticated, accessToken, refreshToken, loading, signup, login, logout }}
     >
       {children}
     </AuthContext.Provider>

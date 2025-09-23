@@ -48,3 +48,35 @@ class LoginSerializer(serializers.Serializer):
 
         data["user"] = user
         return data
+
+class ProfileSerializer(serializers.ModelSerializer):
+    purchase_history = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            "user_id",
+            "username",
+            "email",
+            "user_type",
+            "billing_address",
+            "purchase_history",
+        ]
+        read_only_fields = ["purchase_history"]
+
+        def get_purchase_history(self, obj):
+          orders = obj.Orders.all()
+          return [
+            {
+                "id": order.id,
+                "date": order.created_at.strftime("%Y-%m-%d"),
+                "items" : [
+                    {"name": item.product_name, "qty": item.quantity}
+                    for item in order.items.all()
+                ],
+                "total": order.total_amount,
+            }
+            for order in orders
+        ]
+
+    

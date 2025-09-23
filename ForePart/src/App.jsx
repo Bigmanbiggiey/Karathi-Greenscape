@@ -17,6 +17,7 @@ import CartAndCheckout from "./pages/CartAndCheckout";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Logout from "./pages/Logout";
+import Profile from "./pages/Profile";
 // Admin Pages
 import Dashboard from './pages/Dashboard-Admin';
 import Orders from './pages/Orders-Admin';
@@ -47,6 +48,7 @@ function App() {
                 <Route path="/products" element={<Products />}/>
                 <Route path="/users" element={<Users />}/>
                 <Route path="/vendors" element={<Vendors />}/>
+                <Route path="/profile" element={<Profile />}/>
               </Routes>
             </main>
 

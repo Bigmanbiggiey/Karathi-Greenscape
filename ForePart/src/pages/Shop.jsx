@@ -1,10 +1,11 @@
 // src/pages/Shop.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { Title, Meta } from "react-head";
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 
 import { API_BASE } from "../config";
+import { AuthContext } from "../context/AuthContext";
 
 const Shop = () => {
   const [products, setProducts] = useState([]);
@@ -13,6 +14,7 @@ const Shop = () => {
   const [selectedVariants, setSelectedVariants] = useState({});
 
   const { addToCart } = useCart();
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,13 +37,32 @@ const Shop = () => {
     setSelectedVariants((prev) => ({ ...prev, [productId]: variant }));
   };
 
+  const requireLogin = () => {
+    if (!user) {
+      // you can decide logic here:
+      // For simplicity: send to login, with a register link on login page
+      navigate("/login");
+      return false;
+    }
+    return true;
+  };
+
   const handleAddToCart = (product) => {
+    if (!requireLogin()) return;
+
     const variant = selectedVariants[product.id];
     if (!variant) {
       alert("Please select a variant first.");
       return;
     }
     addToCart({ ...product, selectedVariant: variant });
+  };
+
+  const handleBuyNow = (product) => {
+    if (!requireLogin()) return;
+
+    handleAddToCart(product);
+    navigate("/cart");
   };
 
   if (loading) return <p className="text-center py-10">Loading products...</p>;
@@ -79,15 +100,21 @@ const Shop = () => {
                 </div>
               )}
 
-              <h2 className="font-semibold text-lg mb-2 text-emerald-800">{product.name}</h2>
-              <p className="text-gray-700 text-sm flex-grow">{product.description}</p>
+              <h2 className="font-semibold text-lg mb-2 text-emerald-800">
+                {product.name}
+              </h2>
+              <p className="text-gray-700 text-sm flex-grow">
+                {product.description}
+              </p>
 
               {/* Variant Selector */}
               {product.variants && product.variants.length > 0 && (
                 <select
                   className="mt-3 border border-gray-300 rounded-lg p-2 focus:ring-emerald-500 focus:border-emerald-500"
                   value={selectedVariants[product.id] || ""}
-                  onChange={(e) => handleVariantChange(product.id, e.target.value)}
+                  onChange={(e) =>
+                    handleVariantChange(product.id, e.target.value)
+                  }
                 >
                   <option value="">Choose a variant</option>
                   {product.variants.map((variant) => (
@@ -121,10 +148,7 @@ const Shop = () => {
                   Add to Cart
                 </button>
                 <button
-                  onClick={() => {
-                    handleAddToCart(product);
-                    navigate("/cart");
-                  }}
+                  onClick={() => handleBuyNow(product)}
                   className="flex-1 py-2 px-4 bg-amber-400 text-white rounded-lg hover:bg-amber-600 transition"
                 >
                   Buy Now
