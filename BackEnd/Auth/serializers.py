@@ -3,21 +3,36 @@ from django.contrib.auth import get_user_model, authenticate
 
 User = get_user_model()
 
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["user_id", "username", "email", "first_name", "last_name", "user_type"]
+        fields = [
+            "user_id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "user_type",
+        ]
+
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
-
     class Meta:
         model = User
-        fields = ["username", "email", "password", "first_name", "last_name", "user_type"]
+        fields = [
+            "username",
+            "email",
+            "password",
+            "first_name",
+            "last_name",
+            "user_type",
+        ]
 
     def create(self, validated_data):
-        user = User.objects.create_user(
+        return User.objects.create_user(
             username=validated_data["username"],
             email=validated_data["email"],
             password=validated_data["password"],
@@ -25,7 +40,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             last_name=validated_data.get("last_name", ""),
             user_type=validated_data.get("user_type", "customer"),
         )
-        return user
+
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -49,6 +64,7 @@ class LoginSerializer(serializers.Serializer):
         data["user"] = user
         return data
 
+
 class ProfileSerializer(serializers.ModelSerializer):
     purchase_history = serializers.SerializerMethodField()
 
@@ -64,13 +80,13 @@ class ProfileSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["purchase_history"]
 
-        def get_purchase_history(self, obj):
-          orders = obj.Orders.all()
-          return [
+    def get_purchase_history(self, obj):
+        orders = obj.orders.all()  # make sure related_name="orders" is set in your Order model
+        return [
             {
                 "id": order.id,
                 "date": order.created_at.strftime("%Y-%m-%d"),
-                "items" : [
+                "items": [
                     {"name": item.product_name, "qty": item.quantity}
                     for item in order.items.all()
                 ],
@@ -78,5 +94,3 @@ class ProfileSerializer(serializers.ModelSerializer):
             }
             for order in orders
         ]
-
-    

@@ -2,22 +2,27 @@
 import React, { useContext, useState } from "react";
 import { Title, Meta } from "react-head";
 import { AuthContext } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function Login() {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [form, setForm] = useState({
     email: "",
     password: "",
   });
 
+  // Grab ?next= param from URL
+  const searchParams = new URLSearchParams(location.search);
+  const nextPath = searchParams.get("next") || "/";
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await login(form.email, form.password);
-      navigate("/"); // redirect to homepage/dashboard after login
+      navigate(nextPath, { replace: true }); // redirect back where they came from
     } catch (err) {
       alert(err.message);
     }
@@ -65,7 +70,10 @@ export default function Login() {
 
         <p className="text-center text-sm">
           Don’t have an account?{" "}
-          <a href="/register" className="text-green-600 underline">
+          <a
+            href={`/register?next=${encodeURIComponent(nextPath)}`}
+            className="text-green-600 underline"
+          >
             Register
           </a>
         </p>

@@ -34,6 +34,27 @@ export default function AuthProvider({ children }) {
     localStorage.removeItem("user");
   }, [accessToken]);
 
+  // 🟢 Fetch profile
+  const fetchProfile = useCallback(
+    async (token = accessToken) => {
+      if (!token) return;
+
+      const res = await fetch(`${API_BASE}/profile/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data);
+        localStorage.setItem("user", JSON.stringify(data));
+      } else if (res.status === 401) {
+        // Token expired, try refreshing
+        await refreshTokenFunc();
+      }
+    },
+    [accessToken] // ✅ depends only on accessToken
+  );
+
   // 🟢 Refresh token
   const refreshTokenFunc = useCallback(async () => {
     if (!refreshToken) return;
@@ -53,7 +74,10 @@ export default function AuthProvider({ children }) {
     setAccessToken(data.access);
     localStorage.setItem("accessToken", data.access);
     setLoading(false);
-  }, [refreshToken, logout]);
+
+    // ✅ fetch profile after refreshing
+    fetchProfile(data.access);
+  }, [refreshToken, logout, fetchProfile]); // ✅ include fetchProfile
 
   // 🟢 On load
   useEffect(() => {
@@ -107,7 +131,17 @@ export default function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated, accessToken, refreshToken, loading, signup, login, logout }}
+      value={{
+        user,
+        isAuthenticated,
+        accessToken,
+        refreshToken,
+        loading,
+        signup,
+        login,
+        logout,
+        fetchProfile,
+      }}
     >
       {children}
     </AuthContext.Provider>

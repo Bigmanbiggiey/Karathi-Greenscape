@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import { Title, Meta } from "react-head";
 import { useCart } from "../context/CartContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 import { API_BASE } from "../config";
 import { AuthContext } from "../context/AuthContext";
@@ -16,6 +16,7 @@ const Shop = () => {
   const { addToCart } = useCart();
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -37,11 +38,11 @@ const Shop = () => {
     setSelectedVariants((prev) => ({ ...prev, [productId]: variant }));
   };
 
+  // Redirect to login if not logged in, and preserve "next" param
   const requireLogin = () => {
     if (!user) {
-      // you can decide logic here:
-      // For simplicity: send to login, with a register link on login page
-      navigate("/login");
+      const nextPath = location.pathname; // e.g. "/shop"
+      navigate(`/login?next=${encodeURIComponent(nextPath)}`);
       return false;
     }
     return true;
