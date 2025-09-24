@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model, authenticate
+from Shop.models import Order
 
 User = get_user_model()
 
@@ -71,26 +72,26 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            "user_id",
             "username",
+            "first_name"
+            "last_name"
             "email",
-            "user_type",
             "billing_address",
             "purchase_history",
         ]
         read_only_fields = ["purchase_history"]
 
     def get_purchase_history(self, obj):
-        orders = obj.orders.all()  # make sure related_name="orders" is set in your Order model
+        orders = Order.objects.filter(user=obj).order_by("created_at")  # make sure related_name="orders" is set in your Order model
         return [
             {
-                "id": order.id,
-                "date": order.created_at.strftime("%Y-%m-%d"),
+                "id": Order.id,
+                "status": Order.status,
+                "created_at": Order.created_at,
                 "items": [
-                    {"name": item.product_name, "qty": item.quantity}
+                    {"product": item.product_name, "quantity": item.quantity, "price": item.price}
                     for item in order.items.all()
                 ],
-                "total": order.total_amount,
             }
             for order in orders
         ]

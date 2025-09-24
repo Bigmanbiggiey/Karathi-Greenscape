@@ -1,174 +1,148 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useContext, useEffect, useState } from "react";
+import { AuthContext } from "../context/AuthContext";
 
-const Profile = () => {
+export default function Profile() {
+  const { user, accessToken, fetchProfile } = useContext(AuthContext);
   const [profile, setProfile] = useState(null);
   const [billingAddress, setBillingAddress] = useState("");
-  const [purchaseHistory, setPurchaseHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  // Fetch user profile + purchase history
+  // Fetch profile on mount
   useEffect(() => {
-    const fetchProfile = async () => {
+    const loadProfile = async () => {
       try {
-        const token = localStorage.getItem("access");
-        const res = await axios.get("http://localhost:8000/api/auth/profile/", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setProfile(res.data);
-        setBillingAddress(res.data.billing_address || "");
-        setPurchaseHistory(res.data.purchase_history || []);
+        await fetchProfile();
+        setProfile(user);
+        if (user?.billing_address) {
+          setBillingAddress(user.billing_address);
+        }
       } catch (err) {
-        console.error("Error fetching profile:", err);
-      } finally {
-        setLoading(false);
+        console.error("Failed to load profile:", err);
       }
     };
-    fetchProfile();
-  }, []);
+    loadProfile();
+  }, [user, fetchProfile]);
 
-  const handleSave = async (e) => {
-    e.preventDefault();
+  // Save billing address
+  const handleSave = async () => {
+    if (!accessToken) return;
+    setSaving(true);
+
     try {
-      const token = localStorage.getItem("access");
-      await axios.put(
-        "http://localhost:8000/api/auth/profile/",
-        { ...profile, billing_address: billingAddress },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/auth/profile/`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ billing_address: billingAddress }),
+        }
       );
-      alert("Profile updated successfully!");
-      setIsEditing(false);
+
+      if (!res.ok) throw new Error("Failed to update profile");
+
+      const updated = await res.json();
+      setProfile(updated);
+      alert("Billing address updated!");
     } catch (err) {
       console.error("Update failed:", err);
-      alert("Failed to update profile");
+      alert("Could not save billing address.");
+    } finally {
+      setSaving(false);
     }
   };
 
-  if (loading) return <p className="text-center mt-10">Loading...</p>;
+  if (!profile) {
+    return <p className="text-center mt-10">Loading profile...</p>;
+  }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">My Profile</h1>
+    <div className="max-w-3xl mx-auto mt-10 p-6 bg-white rounded-2xl shadow-md">
+      <h2 className="text-2xl font-bold mb-6 text-center">My Profile</h2>
 
-      {/* Profile Form */}
-      <form
-        onSubmit={handleSave}
-        className="bg-white shadow-lg rounded-2xl p-6 mb-8"
-      >
-        <h2 className="text-xl font-semibold mb-4">User Details</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input
-            type="text"
-            value={profile?.first_name || ""}
-            onChange={(e) =>
-              setProfile({ ...profile, first_name: e.target.value })
-            }
-            disabled={!isEditing}
-            className={`border rounded-xl p-3 w-full ${
-              !isEditing ? "bg-gray-100 text-gray-600" : ""
-            }`}
-          />
-          <input
-            type="text"
-            value={profile?.last_name || ""}
-            onChange={(e) =>
-              setProfile({ ...profile, last_name: e.target.value })
-            }
-            disabled={!isEditing}
-            className={`border rounded-xl p-3 w-full ${
-              !isEditing ? "bg-gray-100 text-gray-600" : ""
-            }`}
-          />
-          <input
-            type="email"
-            value={profile?.email || ""}
-            onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-            disabled={!isEditing}
-            className={`border rounded-xl p-3 w-full ${
-              !isEditing ? "bg-gray-100 text-gray-600" : ""
-            }`}
-          />
-          <input
-            type="text"
-            value={profile?.username || ""}
-            disabled
-            className="border rounded-xl p-3 w-full bg-gray-100 text-gray-600"
-          />
+      {/* Profile Info */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div>
+          <p className="font-semibold">Username:</p>
+          <p>{profile.username}</p>
         </div>
-
-        {/* Billing Address */}
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold mb-2">Billing Address</h3>
-          <textarea
-            value={billingAddress}
-            onChange={(e) => setBillingAddress(e.target.value)}
-            disabled={!isEditing}
-            placeholder="Enter billing address"
-            className={`border rounded-xl p-3 w-full ${
-              !isEditing ? "bg-gray-100 text-gray-600" : ""
-            }`}
-            rows={3}
-          />
+        <div>
+          <p className="font-semibold">Email:</p>
+          <p>{profile.email}</p>
         </div>
-
-        {/* Action Buttons */}
-        <div className="mt-6 flex gap-4">
-          {isEditing ? (
-            <>
-              <button
-                type="submit"
-                className="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
-              >
-                Save Changes
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsEditing(false)}
-                className="px-6 py-2 bg-gray-500 text-white rounded-xl hover:bg-gray-600"
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setIsEditing(true)}
-              className="px-6 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700"
-            >
-              Edit Profile
-            </button>
-          )}
+        <div>
+          <p className="font-semibold">First Name:</p>
+          <p>{profile.first_name || "—"}</p>
         </div>
-      </form>
+        <div>
+          <p className="font-semibold">Last Name:</p>
+          <p>{profile.last_name || "—"}</p>
+        </div>
+      </div>
+
+      {/* Billing Address */}
+      <div className="mb-6">
+        <label className="block font-semibold mb-2">Billing Address</label>
+        <textarea
+          value={billingAddress}
+          onChange={(e) => setBillingAddress(e.target.value)}
+          rows={3}
+          className="w-full border rounded-lg p-2"
+          placeholder="Enter billing address (optional)"
+        />
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="mt-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+        >
+          {saving ? "Saving..." : "Save"}
+        </button>
+      </div>
 
       {/* Purchase History */}
-      <div className="bg-white shadow-lg rounded-2xl p-6">
-        <h2 className="text-xl font-semibold mb-4">Purchase History</h2>
-        {purchaseHistory.length > 0 ? (
-          <ul className="space-y-4">
-            {purchaseHistory.map((order) => (
-              <li key={order.id} className="border-b pb-3 last:border-none">
-                <p className="font-medium">
-                  Order #{order.id} – {order.date}
-                </p>
-                <p className="text-sm text-gray-600">
-                  {order.items
-                    .map((item) => `${item.name} x${item.qty}`)
-                    .join(", ")}
-                </p>
-                <p className="text-sm font-semibold">Total: ${order.total}</p>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-gray-600">No purchases yet.</p>
-        )}
-      </div>
+      <h3 className="text-xl font-bold mb-4">Purchase History</h3>
+      {profile.purchase_history?.length > 0 ? (
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse border border-gray-200">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border p-2">Order ID</th>
+                <th className="border p-2">Total</th>
+                <th className="border p-2">Status</th>
+                <th className="border p-2">Date</th>
+                <th className="border p-2">Items</th>
+              </tr>
+            </thead>
+            <tbody>
+              {profile.purchase_history.map((order) => (
+                <tr key={order.id}>
+                  <td className="border p-2 text-center">{order.id}</td>
+                  <td className="border p-2 text-center">
+                    {order.total} KES
+                  </td>
+                  <td className="border p-2 text-center">{order.status}</td>
+                  <td className="border p-2 text-center">
+                    {new Date(order.created_at).toLocaleDateString()}
+                  </td>
+                  <td className="border p-2">
+                    <ul className="list-disc pl-4">
+                      {order.items.map((item, idx) => (
+                        <li key={idx}>
+                          {item.product} × {item.quantity} ({item.price} KES)
+                        </li>
+                      ))}
+                    </ul>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p className="text-gray-500">No purchase history yet.</p>
+      )}
     </div>
   );
-};
-
-export default Profile;
+}

@@ -1,4 +1,4 @@
-from rest_framework import generics, status, viewsets, mixins, permissions
+from rest_framework import generics, status, viewsets, mixins
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
@@ -11,11 +11,13 @@ from .permissions import IsAdminOrSelf
 User = get_user_model()
 
 
+# --- Register ---
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
 
 
+# --- Login ---
 class LoginView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
@@ -30,20 +32,26 @@ class LoginView(APIView):
         })
 
 
+# --- Profile (fetch/update logged-in user) ---
 class ProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = ProfileSerializer
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        return Response(UserSerializer(request.user).data)
+    def get_object(self):
+        # Always return the logged-in user
+        return self.request.user
 
 
+# --- Logout (blacklist refresh token) ---
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        refresh_token = request.data.get("refresh")
+        if not refresh_token:
+            return Response({"error": "Refresh token required"}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
-            refresh_token = request.data["refresh"]
             token = RefreshToken(refresh_token)
             token.blacklist()
             return Response({"detail": "Successfully logged out."}, status=status.HTTP_205_RESET_CONTENT)
@@ -51,7 +59,7 @@ class LogoutView(APIView):
             return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-# --- User Management Endpoint with Role Restrictions ---
+# --- User Management Endpoint (admins can see all users, others see only self) ---
 class UserViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
@@ -66,4 +74,4 @@ class UserViewSet(
         user = self.request.user
         if user.user_type == "admin":
             return User.objects.all()
-        return User.objects.filter(id=user.id)  # Non-admins see only themselves
+        return User.objects.filter(id=user.id)
