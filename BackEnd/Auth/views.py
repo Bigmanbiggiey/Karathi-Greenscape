@@ -1,4 +1,4 @@
-from rest_framework import generics, status, viewsets, mixins
+from rest_framework import generics, status, viewsets, mixins, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
@@ -35,7 +35,7 @@ class LoginView(APIView):
 # --- Profile (fetch/update logged-in user) ---
 class ProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = ProfileSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
         # Always return the logged-in user

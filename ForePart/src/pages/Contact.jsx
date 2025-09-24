@@ -8,10 +8,10 @@ const Contact = () => {
     email: "",
     message: "",
   });
-
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState(null);
+  const [sending, setSending] = useState(false);
 
-  // Track which map is selected
   const [activeMap, setActiveMap] = useState("kitengela");
 
   const handleChange = (e) => {
@@ -21,10 +21,32 @@ const Contact = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form submitted:", form);
-    setSubmitted(true);
+    setSending(true);
+    setError(null);
+
+    try {
+      const res = await fetch("https://formspree.io/f/xdkwobqo", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to send message.");
+      }
+
+      setSubmitted(true);
+      setForm({ name: "", email: "", message: "" });
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong. Please try again later.");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -64,7 +86,7 @@ const Contact = () => {
           </p>
           <div className="space-y-4">
             <p>
-              📍 <strong>Locations:</strong> Head Office: Kitengela - Along Nairobi Namanga Highway, Opp Riverside Hotel <br /> Branches: Kimalat, kitengela and Kamangu, Limuru.
+              📍 <strong>Locations:</strong> Head Office: Kitengela - Along Nairobi Namanga Highway, Opp Riverside Hotel <br /> Branches: Kimalat, Kitengela and Kamangu, Limuru.
             </p>
             <p>
               📞 <strong>Phone:</strong> +254 742 127 811
@@ -142,11 +164,16 @@ const Contact = () => {
                 ></textarea>
               </div>
 
+              {error && (
+                <p className="text-red-600 text-sm">{error}</p>
+              )}
+
               <button
                 type="submit"
-                className="w-full py-2 px-4 bg-green-700 text-white font-semibold rounded-lg shadow-md hover:bg-green-800 transition"
+                disabled={sending}
+                className="w-full py-2 px-4 bg-green-700 text-white font-semibold rounded-lg shadow-md hover:bg-green-800 transition disabled:opacity-50"
               >
-                Send Message
+                {sending ? "Sending..." : "Send Message"}
               </button>
             </form>
           )}
@@ -182,7 +209,7 @@ const Contact = () => {
         <div className="w-full h-96 rounded-xl overflow-hidden shadow-md">
           {activeMap === "kitengela" ? (
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d296.44435331992986!2d36.95463980705027!3d-1.4929641360481618!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182fa029a32ea761%3A0x1b98a0c9cee3a824!2sKitengela!5e0!3m2!1sen!2ske!4v1758527751462!5m2!1sen!2ske" 
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d296.44435331992986!2d36.95463980705027!3d-1.4929641360481618!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182fa029a32ea761%3A0x1b98a0c9cee3a824!2sKitengela!5e0!3m2!1sen!2ske!4v1758527751462!5m2!1sen!2ske"
               height="100%"
               width="100%"
               style={{ border: 0 }}
@@ -193,7 +220,7 @@ const Contact = () => {
             ></iframe>
           ) : (
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m16!1m12!1m3!1d15955.53944709092!2d36.58767862243058!3d-1.2394158951520282!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!2m1!1sKamangu%20limuru!5e0!3m2!1sen!2ske!4v1758527970254!5m2!1sen!2ske" 
+              src="https://www.google.com/maps/embed?pb=!1m16!1m12!1m3!1d15955.53944709092!2d36.58767862243058!3d-1.2394158951520282!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!2m1!1sKamangu%20limuru!5e0!3m2!1sen!2ske!4v1758527970254!5m2!1sen!2ske"
               height="100%"
               width="100%"
               style={{ border: 0 }}
@@ -205,8 +232,6 @@ const Contact = () => {
           )}
         </div>
       </section>
-
-      
     </div>
   );
 };

@@ -2,6 +2,9 @@
 import React from "react";
 import { Title, Meta } from "react-head";
 import { Link } from "react-router-dom";
+import indoor from "../assets/indoor.jpg";
+import outdoor from "../assets/outdoor.jpg";
+import flowering from "../assets/flowering.jpg";
 
 const Home = () => {
   return (
@@ -86,15 +89,15 @@ const Home = () => {
           <div className="grid md:grid-cols-3 gap-8">
             {/* Indoor Plants */}
             <div className="bg-white shadow rounded-2xl p-6 hover:shadow-lg transition text-center">
-              <div className="h-40 bg-green-100 rounded-xl mb-4 flex items-center justify-center">
-                <span className="text-3xl">🏡</span>
-              </div>
+              <img
+                src={indoor}
+                alt="Indoor Plants"
+                className="h-40 w-full object-cover rounded-xl mb-4"
+              />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 Indoor Plants
               </h3>
-              <p className="text-gray-600 mb-2">
-                Perfect for homes and offices.
-              </p>
+              <p className="text-gray-600 mb-2">Perfect for homes and offices.</p>
               <ul className="text-gray-700 text-sm">
                 <li>• Duranta</li>
                 <li>• Geranium</li>
@@ -109,9 +112,11 @@ const Home = () => {
 
             {/* Outdoor Shrubs */}
             <div className="bg-white shadow rounded-2xl p-6 hover:shadow-lg transition text-center">
-              <div className="h-40 bg-green-100 rounded-xl mb-4 flex items-center justify-center">
-                <span className="text-3xl">🌳</span>
-              </div>
+              <img
+                src={outdoor}
+                alt="Outdoor Shrubs"
+                className="h-40 w-full object-cover rounded-xl mb-4"
+              />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 Outdoor Shrubs
               </h3>
@@ -133,9 +138,11 @@ const Home = () => {
 
             {/* Flowering Plants */}
             <div className="bg-white shadow rounded-2xl p-6 hover:shadow-lg transition text-center">
-              <div className="h-40 bg-green-100 rounded-xl mb-4 flex items-center justify-center">
-                <span className="text-3xl">🌸</span>
-              </div>
+              <img
+                src={flowering}
+                alt="Flowering Plants"
+                className="h-40 w-full object-cover rounded-xl mb-4"
+              />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 Flowering Plants
               </h3>

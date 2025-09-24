@@ -13,9 +13,7 @@ export default function Profile() {
       try {
         await fetchProfile();
         setProfile(user);
-        if (user?.billing_address) {
-          setBillingAddress(user.billing_address);
-        }
+        setBillingAddress(user?.billing_address || "");
       } catch (err) {
         console.error("Failed to load profile:", err);
       }
@@ -27,7 +25,6 @@ export default function Profile() {
   const handleSave = async () => {
     if (!accessToken) return;
     setSaving(true);
-
     try {
       const res = await fetch(
         `${import.meta.env.VITE_API_URL}/api/auth/profile/`,
@@ -42,7 +39,6 @@ export default function Profile() {
       );
 
       if (!res.ok) throw new Error("Failed to update profile");
-
       const updated = await res.json();
       setProfile(updated);
       alert("Billing address updated!");
@@ -59,10 +55,10 @@ export default function Profile() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto mt-10 p-6 bg-white rounded-2xl shadow-md">
+    <div className="max-w-4xl mx-auto mt-10 p-6 bg-white rounded-2xl shadow-md">
       <h2 className="text-2xl font-bold mb-6 text-center">My Profile</h2>
 
-      {/* Profile Info */}
+      {/* User Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div>
           <p className="font-semibold">Username:</p>
@@ -105,7 +101,7 @@ export default function Profile() {
       <h3 className="text-xl font-bold mb-4">Purchase History</h3>
       {profile.purchase_history?.length > 0 ? (
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse border border-gray-200">
+          <table className="w-full border border-gray-200 border-collapse">
             <thead>
               <tr className="bg-gray-100">
                 <th className="border p-2">Order ID</th>
@@ -117,11 +113,9 @@ export default function Profile() {
             </thead>
             <tbody>
               {profile.purchase_history.map((order) => (
-                <tr key={order.id}>
-                  <td className="border p-2 text-center">{order.id}</td>
-                  <td className="border p-2 text-center">
-                    {order.total} KES
-                  </td>
+                <tr key={order.order_id}>
+                  <td className="border p-2 text-center">{order.order_id}</td>
+                  <td className="border p-2 text-center">{order.total_price} KES</td>
                   <td className="border p-2 text-center">{order.status}</td>
                   <td className="border p-2 text-center">
                     {new Date(order.created_at).toLocaleDateString()}
@@ -130,7 +124,7 @@ export default function Profile() {
                     <ul className="list-disc pl-4">
                       {order.items.map((item, idx) => (
                         <li key={idx}>
-                          {item.product} × {item.quantity} ({item.price} KES)
+                          {item.product} ({item.variant}) × {item.quantity} ({item.price} KES)
                         </li>
                       ))}
                     </ul>

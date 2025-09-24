@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model, authenticate
-from Shop.models import Order
+from Shop.models import Order, OrderItem
 
 User = get_user_model()
 
@@ -73,8 +73,8 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             "username",
-            "first_name"
-            "last_name"
+            "first_name",
+            "last_name",
             "email",
             "billing_address",
             "purchase_history",
@@ -82,16 +82,25 @@ class ProfileSerializer(serializers.ModelSerializer):
         read_only_fields = ["purchase_history"]
 
     def get_purchase_history(self, obj):
-        orders = Order.objects.filter(user=obj).order_by("created_at")  # make sure related_name="orders" is set in your Order model
-        return [
-            {
-                "id": Order.id,
-                "status": Order.status,
-                "created_at": Order.created_at,
-                "items": [
-                    {"product": item.product_name, "quantity": item.quantity, "price": item.price}
-                    for item in order.items.all()
-                ],
-            }
-            for order in orders
-        ]
+        orders = Order.objects.filter(user=obj).order_by("-created_at")
+        history = []
+
+        for order in orders:
+            items_data = []
+            for item in order.items.all():  # related_name="items" in OrderItem
+                items_data.append({
+                    "product": item.variant.product.name,
+                    "variant": item.variant.size or "Default",
+                    "quantity": item.quantity,
+                    "price": item.variant.price,
+                })
+
+            history.append({
+                "order_id": order.id,
+                "status": order.status,
+                "total_price": order.total_price,
+                "created_at": order.created_at,
+                "items": items_data,
+            })
+
+        return history
