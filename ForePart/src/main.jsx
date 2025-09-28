@@ -1,4 +1,4 @@
-// src/main.jsx (or index.js depending on your setup)
+// src/main.jsx 
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
