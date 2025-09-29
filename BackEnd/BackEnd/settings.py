@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from pathlib import Path
 from datetime import timedelta
+from rest_framework.settings import api_settings
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,7 +30,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    "a979c98bb4d7.ngrok-free.app",
+    "daa2299b7eef.ngrok-free.app",
 ]
 
 
@@ -168,6 +169,7 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ("Bearer",),
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
     "USER_ID_FIELD": "user_id",      # match your primary key
     "USER_ID_CLAIM": "user_id",
 }
@@ -179,4 +181,4 @@ MPESA_CONSUMER_KEY = "0uIRCid8LtZKc3W3fnRWCGZznK7pDEtiNLYKqqJyviupHAwK"
 MPESA_CONSUMER_SECRET = "2bLTBBPbiSBjd7OhkeIGBYNxCQt21A1cZuo97GRGJ3Q6XjLIqadCZI9wGF9nLwKW"
 MPESA_SHORTCODE = "174379"  # sandbox shortcode
 MPESA_PASSKEY = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
-MPESA_CALLBACK_URL = os.getenv("https://a979c98bb4d7.ngrok-free.app /api/payment/payments/callback/")
+MPESA_CALLBACK_URL = os.getenv("https://daa2299b7eef.ngrok-free.app /api/payment/payments/callback/")

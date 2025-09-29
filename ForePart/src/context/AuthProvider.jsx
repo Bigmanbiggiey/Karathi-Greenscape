@@ -1,10 +1,12 @@
 // src/context/AuthProvider.jsx
 import React, { useState, useEffect, useCallback } from "react";
 import { AuthContext } from "./AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const API_BASE = `${import.meta.env.VITE_API_URL}/api/auth`;
 
 export default function AuthProvider({ children }) {
+  const navigate = useNavigate();
   const [user, setUser] = useState(() =>
     JSON.parse(localStorage.getItem("user"))
   );
@@ -17,10 +19,12 @@ export default function AuthProvider({ children }) {
   // 🟢 Logout
   const logout = useCallback(async () => {
     try {
-      await fetch(`${API_BASE}/logout/`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      if (accessToken) {
+        await fetch(`${API_BASE}/logout/`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+      }
     } catch (err) {
       console.error("Logout failed:", err);
     }
@@ -32,7 +36,8 @@ export default function AuthProvider({ children }) {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
-  }, [accessToken]);
+    navigate("/login"); // redirect to login
+  }, [accessToken, navigate]);
 
   // 🟢 Fetch profile
   const fetchProfile = useCallback(
@@ -48,11 +53,10 @@ export default function AuthProvider({ children }) {
         setUser(data);
         localStorage.setItem("user", JSON.stringify(data));
       } else if (res.status === 401) {
-        // Token expired, try refreshing
         await refreshTokenFunc();
       }
     },
-    [accessToken] // ✅ depends only on accessToken
+    [accessToken]
   );
 
   // 🟢 Refresh token
@@ -73,11 +77,10 @@ export default function AuthProvider({ children }) {
     const data = await res.json();
     setAccessToken(data.access);
     localStorage.setItem("accessToken", data.access);
-    setLoading(false);
 
-    // ✅ fetch profile after refreshing
-    fetchProfile(data.access);
-  }, [refreshToken, logout, fetchProfile]); // ✅ include fetchProfile
+    await fetchProfile(data.access);
+    setLoading(false);
+  }, [refreshToken, logout, fetchProfile]);
 
   // 🟢 On load
   useEffect(() => {
@@ -88,26 +91,40 @@ export default function AuthProvider({ children }) {
     }
   }, [refreshToken, refreshTokenFunc]);
 
-  // 🟢 Auto refresh
+  // 🟢 Auto refresh every 4 minutes
   useEffect(() => {
     if (!refreshToken) return;
     const interval = setInterval(refreshTokenFunc, 4 * 60 * 1000);
     return () => clearInterval(interval);
   }, [refreshToken, refreshTokenFunc]);
 
-  // 🟢 Register
-  const signup = async ({ username, email, password, user_type = "customer", billing_address = "" }) => {
+  // 🟢 Register (handles keys for staff/admin)
+  const signup = async ({
+    username,
+    email,
+    password,
+    user_type = "customer",
+    billing_address = "",
+    key = "",
+  }) => {
+    const bodyData = { username, email, password, user_type, billing_address };
+    if (user_type === "admin" || user_type === "staff") bodyData.key = key;
+
     const res = await fetch(`${API_BASE}/register/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, email, password, user_type, billing_address }),
+      body: JSON.stringify(bodyData),
     });
 
-    if (!res.ok) throw new Error("Registration failed");
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData.detail || "Registration failed");
+    }
+
     return await res.json();
   };
 
-  // 🟢 Login
+  // 🟢 Login (includes redirect_url)
   const login = async (email, password) => {
     const res = await fetch(`${API_BASE}/login/`, {
       method: "POST",
@@ -115,7 +132,11 @@ export default function AuthProvider({ children }) {
       body: JSON.stringify({ email, password }),
     });
 
-    if (!res.ok) throw new Error("Login failed");
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData.detail || "Login failed");
+    }
+
     const data = await res.json();
 
     setAccessToken(data.access);
@@ -126,7 +147,12 @@ export default function AuthProvider({ children }) {
     localStorage.setItem("refreshToken", data.refresh);
     localStorage.setItem("user", JSON.stringify(data.user));
 
-    return data.user;
+    // Determine redirect URL based on user_type
+    let redirect_url = "/";
+    if (data.user.user_type === "admin") redirect_url = "/admin/dashboard";
+    else if (data.user.user_type === "staff") redirect_url = "/staff/dashboard";
+
+    return { ...data.user, redirect_url };
   };
 
   return (
