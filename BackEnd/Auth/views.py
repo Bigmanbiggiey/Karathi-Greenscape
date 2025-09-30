@@ -14,16 +14,22 @@ from .serializers import (
     SessionSerializer,
 )
 from .permissions import IsAdminOrSelf
+import logging
 
 User = get_user_model()
 
 
 # --- Register ---
 class RegisterView(generics.CreateAPIView):
-    """Handles new user registration"""
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
-    permission_classes = [permissions.AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        try:
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f"Registration failed: {str(e)}", exc_info=True)
+            return Response({"detail": "Registration failed"}, status=400)
 
 
 # --- Login ---
@@ -180,3 +186,7 @@ class SessionView(APIView):
                 return Response({"error": "Session not found"}, status=404)
 
         return Response({"error": "Provide 'id' or 'all'"}, status=400)
+    
+    
+logger = logging.getLogger(__name__)
+

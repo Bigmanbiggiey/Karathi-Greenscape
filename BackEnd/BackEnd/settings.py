@@ -182,3 +182,25 @@ MPESA_CONSUMER_SECRET = "2bLTBBPbiSBjd7OhkeIGBYNxCQt21A1cZuo97GRGJ3Q6XjLIqadCZI9
 MPESA_SHORTCODE = "174379"  # sandbox shortcode
 MPESA_PASSKEY = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
 MPESA_CALLBACK_URL = os.getenv("https://daa2299b7eef.ngrok-free.app /api/payment/payments/callback/")
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "file": {
+            "level": "ERROR",
+            "class": "logging.FileHandler",
+            "filename": "error.log",
+        },
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["file", "console"],
+            "level": "ERROR",
+            "propagate": True,
+        },
+    },
+}

@@ -99,30 +99,46 @@ export default function AuthProvider({ children }) {
   }, [refreshToken, refreshTokenFunc]);
 
   // 🟢 Register (handles keys for staff/admin)
-  const signup = async ({
-    username,
-    email,
-    password,
-    user_type = "customer",
-    billing_address = "",
-    key = "",
-  }) => {
-    const bodyData = { username, email, password, user_type, billing_address };
-    if (user_type === "admin" || user_type === "staff") bodyData.key = key;
-
-    const res = await fetch(`${API_BASE}/register/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(bodyData),
-    });
-
-    if (!res.ok) {
-      const errData = await res.json();
-      throw new Error(errData.detail || "Registration failed");
-    }
-
-    return await res.json();
+const signup = async ({
+  username,
+  email,
+  password,
+  first_name,
+  last_name,
+  user_type = "customer",
+  billing_address = "",
+  key = "",
+}) => {
+  const bodyData = { 
+    username, 
+    email, 
+    password, 
+    first_name,
+    last_name,
+    user_type, 
+    billing_address 
   };
+  
+  // Send the key with the correct field name
+  if (user_type === "admin") {
+    bodyData.admin_key = key;
+  } else if (user_type === "staff") {
+    bodyData.staff_key = key;
+  }
+
+  const res = await fetch(`${API_BASE}/register/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(bodyData),
+  });
+
+  if (!res.ok) {
+    const errData = await res.json();
+    throw new Error(errData.detail || "Registration failed");
+  }
+
+  return await res.json();
+};
 
   // 🟢 Login (includes redirect_url)
   const login = async (email, password) => {

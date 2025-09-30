@@ -13,7 +13,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            "user_id",
+            "id",
             "username",
             "email",
             "first_name",
@@ -21,63 +21,74 @@ class UserSerializer(serializers.ModelSerializer):
             "user_type",
             "billing_address",
         ]
-        read_only_fields = ["user_id", "email", "user_type"]
+        read_only_fields = ["id", "email", "user_type"]
 
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
-    key = serializers.CharField(write_only=True, required=False)  # optional, required for staff/admin
+    admin_key = serializers.CharField(write_only=True, required=False)
+    staff_key = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = User
-        fields = ["username", "email", "password", "first_name", "last_name", "user_type", "key"]
+        fields = [
+            "username",
+            "email",
+            "password",
+            "first_name",
+            "last_name",
+            "user_type",
+            "billing_address",
+            "admin_key",
+            "staff_key",
+        ]
 
     def validate(self, data):
-        user_type = data.get("user_type", "customer")
-        key = data.get("key", None)
+        user_type = data.get("user_type")
+        
+        # Enforce billing_address for customers
+        if user_type == "customer" and not data.get("billing_address"):
+            raise serializers.ValidationError({"billing_address": "Billing address is required for customers."})
 
+        # Enforce keys for staff/admin
         if user_type == "admin":
-            if not key:
-                raise serializers.ValidationError({"key": "Admin key is required."})
-            try:
-                admin_key = AdminKey.objects.get(key=key, used=False)
-            except AdminKey.DoesNotExist:
-                raise serializers.ValidationError({"key": "Invalid or already used admin key."})
-
+            key = data.get("admin_key")
+            if not key or not AdminKey.objects.filter(key=key, used=False).exists():
+                raise serializers.ValidationError({"admin_key": "Invalid or missing admin key."})
         elif user_type == "staff":
-            if not key:
-                raise serializers.ValidationError({"key": "Staff key is required."})
-            try:
-                staff_key = StaffKey.objects.get(key=key, used=False)
-            except StaffKey.DoesNotExist:
-                raise serializers.ValidationError({"key": "Invalid or already used staff key."})
+            key = data.get("staff_key")
+            if not key or not StaffKey.objects.filter(key=key, used=False).exists():
+                raise serializers.ValidationError({"staff_key": "Invalid or missing staff key."})
 
         return data
 
     def create(self, validated_data):
-        key = validated_data.pop("key", None)
         user_type = validated_data.get("user_type", "customer")
-
-        # Create the user
+    
+        # Remove keys from validated_data BEFORE creating user
+        admin_key = validated_data.pop("admin_key", None)
+        staff_key = validated_data.pop("staff_key", None)
+    
+    # Mark key as used if applicable
+        if user_type == "admin" and admin_key:
+            AdminKey.objects.filter(key=admin_key).update(used=True)
+        elif user_type == "staff" and staff_key:
+            StaffKey.objects.filter(key=staff_key).update(used=True)
+    
+    # Extract password
+        password = validated_data.pop("password")
+    
+    # Create user with remaining fields
         user = User.objects.create_user(
             username=validated_data["username"],
             email=validated_data["email"],
-            password=validated_data["password"],
+            password=password,
             first_name=validated_data.get("first_name", ""),
             last_name=validated_data.get("last_name", ""),
             user_type=user_type,
+            billing_address=validated_data.get("billing_address", ""),
         )
-
-        # Mark key as used if staff/admin
-        if key and user_type == "admin":
-            admin_key = AdminKey.objects.get(key=key)
-            admin_key.used = True
-            admin_key.save()
-        elif key and user_type == "staff":
-            staff_key = StaffKey.objects.get(key=key)
-            staff_key.used = True
-            staff_key.save()
-
+    
         return user
 
 

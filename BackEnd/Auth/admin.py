@@ -6,10 +6,10 @@ from .models import CustomUser
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
     # Fields to display in the admin list view
-    list_display = ("user_id", "username", "email", "user_type", "is_staff", "is_active")
+    list_display = ("id", "username", "email", "user_type", "is_staff", "is_active")
     list_filter = ("user_type", "is_staff", "is_active")
     search_fields = ("username", "email")
-    ordering = ("user_id",)
+    ordering = ("id",)
 
     # Custom fieldsets for detail view
     fieldsets = (
