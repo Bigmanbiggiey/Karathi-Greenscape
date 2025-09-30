@@ -1,94 +1,140 @@
 // src/pages/Login.jsx
-import React, { useContext, useState } from "react";
+import React, { useState, useContext } from "react";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { Title, Meta } from "react-head";
 import { AuthContext } from "../context/AuthContext";
-import { useNavigate, useLocation, Link } from "react-router-dom";
 
-export default function Login() {
-  const { login } = useContext(AuthContext);
+const Login = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
+  const [searchParams] = useSearchParams();
+  const { login } = useContext(AuthContext);
+  
+  // State for form handling
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Grab ?next= param from URL or fallback to homepage
-  const searchParams = new URLSearchParams(location.search);
-  const nextPath = searchParams.get("next") || "/";
-
-  const handleSubmit = async (e) => {
+  // Handle form submission
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
+
     try {
-      await login(form.email, form.password);
-      navigate(nextPath, { replace: true });
+      // Call login function from AuthContext
+      await login(email, password);
+      
+      // Get the 'next' parameter from URL (where user wanted to go before being redirected to login)
+      const nextPath = searchParams.get("next") || "/";
+      
+      // Redirect user back to their intended destination
+      navigate(nextPath);
     } catch (err) {
-      setError(err.message || "Login failed. Please try again.");
+      // Display error message to user
+      setError(err.message || "Login failed. Please check your credentials.");
     } finally {
       setLoading(false);
     }
   };
 
+  // Preserve the 'next' parameter when linking to register page
+  const nextParam = searchParams.get("next");
+  const registerLink = nextParam 
+    ? `/register?next=${encodeURIComponent(nextParam)}`
+    : "/register";
+
   return (
-    <>
-      {/* SEO Head */}
-      <Title>Login - Karathi Greenscape</Title>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-100 p-4">
+      {/* SEO Meta Tags */}
+      <Title>Login | Karathi Greenscape</Title>
       <Meta
         name="description"
-        content="Log in to your Karathi Greenscape account to shop sustainable products, view your orders, and manage your profile."
+        content="Login to your Karathi Greenscape account to shop eco-friendly products and manage your orders."
       />
 
-      <form
-        onSubmit={handleSubmit}
-        className="flex flex-col max-w-md mx-auto gap-4 mt-10 p-6 border rounded-lg shadow-md bg-white"
-      >
-        <h2 className="text-2xl font-bold text-center">Login</h2>
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-emerald-900 mb-2">
+            Welcome Back
+          </h1>
+          <p className="text-gray-600">Login to continue shopping</p>
+        </div>
 
+        {/* Error Message Display */}
         {error && (
-          <p className="text-red-600 text-center font-medium">{error}</p>
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+            <p className="text-sm font-medium">{error}</p>
+          </div>
         )}
 
-        <input
-          type="email"
-          placeholder="Email"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-          required
-          className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-        />
+        {/* Login Form */}
+        <form onSubmit={handleLogin} className="space-y-6">
+          {/* Email Input */}
+          <div>
+            <label 
+              htmlFor="email" 
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Email Address
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="your.email@example.com"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+            />
+          </div>
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
-          required
-          className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-        />
+          {/* Password Input */}
+          <div>
+            <label 
+              htmlFor="password" 
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              placeholder="Enter your password"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+            />
+          </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 disabled:opacity-50"
-        >
-          {loading ? "Logging in..." : "Login"}
-        </button>
-
-        <p className="text-center text-sm">
-          Don’t have an account?{" "}
-          <Link
-            to={`/register?next=${encodeURIComponent(nextPath)}`}
-            className="text-green-600 underline"
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-emerald-600 text-white py-3 rounded-lg font-semibold hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Register
-          </Link>
-        </p>
-      </form>
-    </>
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </form>
+
+        {/* Divider */}
+        <div className="mt-8 pt-6 border-t border-gray-200">
+          {/* Link to Register */}
+          <p className="text-center text-sm text-gray-600">
+            Don't have an account?{" "}
+            <Link 
+              to={registerLink} 
+              className="text-emerald-600 font-semibold hover:text-emerald-700 hover:underline"
+            >
+              Create one here
+            </Link>
+          </p>
+        </div>
+      </div>
+    </div>
   );
-}
+};
+
+export default Login;

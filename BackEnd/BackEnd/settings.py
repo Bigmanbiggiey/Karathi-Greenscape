@@ -170,7 +170,7 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ("Bearer",),
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
-    "USER_ID_FIELD": "user_id",      # match your primary key
+    "USER_ID_FIELD": "id",      # match your primary key
     "USER_ID_CLAIM": "user_id",
 }
 
