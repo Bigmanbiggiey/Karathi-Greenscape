@@ -11,7 +11,9 @@ const Shop = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedVariants, setSelectedVariants] = useState({}); // Track selected variant for each product
+  const [selectedVariants, setSelectedVariants] = useState({});
+  const [selectedCategory, setSelectedCategory] = useState("all"); // Category filter
+  const [categories, setCategories] = useState([]); // Available categories
 
   // Context and navigation hooks
   const { addToCart } = useCart();
@@ -27,6 +29,10 @@ const Shop = () => {
         if (!res.ok) throw new Error("Failed to load products");
         const data = await res.json();
         setProducts(data);
+
+        // Extract unique categories from products
+        const uniqueCategories = [...new Set(data.map(p => p.category))];
+        setCategories(uniqueCategories);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -38,7 +44,6 @@ const Shop = () => {
 
   /**
    * Handle variant selection for a specific product
-   * Stores the selected variant ID in state
    */
   const handleVariantChange = (productId, variantId) => {
     setSelectedVariants((prev) => ({ 
@@ -49,12 +54,9 @@ const Shop = () => {
 
   /**
    * Check if user is logged in before performing cart actions
-   * If not logged in, redirect to login page with 'next' parameter
-   * The 'next' parameter preserves the current page URL so user can be redirected back
    */
   const requireLogin = () => {
     if (!user) {
-      // Save current path to redirect back after login
       const nextPath = location.pathname;
       navigate(`/login?next=${encodeURIComponent(nextPath)}`);
       return false;
@@ -63,63 +65,67 @@ const Shop = () => {
   };
 
   /**
-   * Add product to cart
-   * 1. Check if user is logged in
-   * 2. Validate that a variant is selected
-   * 3. Add product with selected variant to cart
+   * Add product to cart with selected variant
    */
   const handleAddToCart = (product) => {
-    // Check authentication first
     if (!requireLogin()) return;
 
-    // Get the selected variant for this product
     const variantId = selectedVariants[product.id];
     
-    // Validate variant selection
     if (!variantId) {
-      alert("Please select a variant first.");
+      alert("Please select a size/variant first.");
       return;
     }
 
-    // Find the full variant object from product variants
+    // Find the full variant object
     const selectedVariant = product.variants.find(v => v.id === parseInt(variantId));
 
-    // Add product with variant info to cart
+    if (!selectedVariant || selectedVariant.stock === 0) {
+      alert("Sorry, this variant is out of stock.");
+      return;
+    }
+
     addToCart({ 
       ...product, 
       selectedVariant: selectedVariant 
     });
 
-    // Optional: Show success feedback
-    alert(`${product.name} added to cart!`);
+    alert(`${product.name} (${selectedVariant.size || 'Default'}) added to cart!`);
   };
 
   /**
-   * Buy Now functionality
-   * 1. Check if user is logged in
-   * 2. Add product to cart
-   * 3. Navigate directly to cart page
+   * Buy Now - add to cart and go to checkout
    */
   const handleBuyNow = (product) => {
-    // Check authentication first
     if (!requireLogin()) return;
 
-    // Add to cart (this also validates variant selection)
     const variantId = selectedVariants[product.id];
     if (!variantId) {
-      alert("Please select a variant first.");
+      alert("Please select a size/variant first.");
       return;
     }
 
     const selectedVariant = product.variants.find(v => v.id === parseInt(variantId));
+
+    if (!selectedVariant || selectedVariant.stock === 0) {
+      alert("Sorry, this variant is out of stock.");
+      return;
+    }
+
     addToCart({ 
       ...product, 
       selectedVariant: selectedVariant 
     });
 
-    // Navigate to cart for checkout
     navigate("/cart");
   };
+
+  /**
+   * Filter products by selected category
+   */
+  const filteredProducts = selectedCategory === "all" 
+    ? products 
+    : products.filter(p => p.category === selectedCategory);
 
   // Loading state
   if (loading) {
@@ -156,7 +162,7 @@ const Shop = () => {
       <Title>Shop | Karathi Greenscape</Title>
       <Meta
         name="description"
-        content="Browse eco-friendly products from Karathi Greenscape. Add items to your cart or purchase instantly with secure M-Pesa checkout."
+        content="Browse eco-friendly products from Karathi Greenscape. Add items to your cart or purchase instantly."
       />
 
       {/* Page Header */}
@@ -169,29 +175,78 @@ const Shop = () => {
         </p>
       </div>
 
+      {/* Category Filter */}
+      {categories.length > 0 && (
+        <div className="mb-8">
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Filter by Category:
+          </label>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setSelectedCategory("all")}
+              className={`px-4 py-2 rounded-lg font-medium transition ${
+                selectedCategory === "all"
+                  ? "bg-emerald-600 text-white"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
+            >
+              All Products ({products.length})
+            </button>
+            {categories.map((category) => {
+              const count = products.filter(p => p.category === category).length;
+              return (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`px-4 py-2 rounded-lg font-medium transition capitalize ${
+                    selectedCategory === category
+                      ? "bg-emerald-600 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  {category} ({count})
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Empty State */}
-      {products.length === 0 ? (
+      {filteredProducts.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-gray-600 text-lg">No products available right now.</p>
-          <p className="text-gray-500 mt-2">Check back soon for new arrivals!</p>
+          <p className="text-gray-600 text-lg">
+            {selectedCategory === "all" 
+              ? "No products available right now." 
+              : `No products found in "${selectedCategory}" category.`}
+          </p>
+          <p className="text-gray-500 mt-2">
+            {selectedCategory !== "all" && (
+              <button
+                onClick={() => setSelectedCategory("all")}
+                className="text-emerald-600 hover:underline"
+              >
+                View all products
+              </button>
+            )}
+          </p>
         </div>
       ) : (
         /* Product Grid */
         <div className="grid md:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-6">
-          {products.map((product) => (
-            <div
-              key={product.id}
-              className="border border-gray-200 bg-white rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 p-4 flex flex-col"
-            >
-              {/* Product Image */}
-              {product.image ? (
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-48 object-cover rounded-lg mb-4"
-                />
-              ) : (
-                <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 mb-4">
+          {filteredProducts.map((product) => {
+            // Calculate minimum price from variants
+            const minPrice = product.variants && product.variants.length > 0
+              ? Math.min(...product.variants.map(v => parseFloat(v.price)))
+              : 0;
+
+            return (
+              <div
+                key={product.id}
+                className="border border-gray-200 bg-white rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300 p-4 flex flex-col"
+              >
+                {/* Product Image - placeholder since your model doesn't have image field */}
+                <div className="w-full h-48 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-lg flex items-center justify-center text-gray-400 mb-4">
                   <svg
                     className="w-16 h-16"
                     fill="none"
@@ -206,75 +261,78 @@ const Shop = () => {
                     />
                   </svg>
                 </div>
-              )}
 
-              {/* Product Name */}
-              <h2 className="font-semibold text-lg mb-2 text-emerald-800">
-                {product.name}
-              </h2>
+                {/* Category Badge */}
+                <span className="inline-block px-2 py-1 text-xs font-semibold text-emerald-700 bg-emerald-100 rounded-full mb-2 capitalize w-fit">
+                  {product.category}
+                </span>
 
-              {/* Product Description */}
-              <p className="text-gray-700 text-sm flex-grow mb-4">
-                {product.description || "No description available"}
-              </p>
+                {/* Product Name */}
+                <h2 className="font-semibold text-lg mb-2 text-emerald-800">
+                  {product.name}
+                </h2>
 
-              {/* Variant Selector */}
-              {product.variants && product.variants.length > 0 && (
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select Size/Variant:
-                  </label>
-                  <select
-                    className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
-                    value={selectedVariants[product.id] || ""}
-                    onChange={(e) =>
-                      handleVariantChange(product.id, e.target.value)
-                    }
-                  >
-                    <option value="">Choose a variant</option>
-                    {product.variants.map((variant) => (
-                      <option key={variant.id} value={variant.id}>
-                        {variant.name} – KES{" "}
-                        {typeof variant.price === "number"
-                          ? variant.price.toLocaleString()
-                          : "N/A"}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {/* Price Display */}
-              <div className="mb-4">
-                <p className="text-sm text-gray-600">Starting from</p>
-                <p className="font-bold text-xl">
-                  {typeof product.price === "number" ? (
-                    <span className="text-emerald-700">
-                      KES {product.price.toLocaleString()}
-                    </span>
-                  ) : (
-                    <span className="text-gray-500 italic">Price unavailable</span>
-                  )}
+                {/* Product Description */}
+                <p className="text-gray-700 text-sm flex-grow mb-4">
+                  {product.description || "No description available"}
                 </p>
-              </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-2 mt-auto">
-                <button
-                  onClick={() => handleAddToCart(product)}
-                  className="flex-1 py-2 px-4 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
-                >
-                  Add to Cart
-                </button>
-                <button
-                  onClick={() => handleBuyNow(product)}
-                  className="flex-1 py-2 px-4 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2"
-                >
-                  Buy Now
-                </button>
+                {/* Variant Selector */}
+                {product.variants && product.variants.length > 0 && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select Size:
+                    </label>
+                    <select
+                      className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                      value={selectedVariants[product.id] || ""}
+                      onChange={(e) =>
+                        handleVariantChange(product.id, e.target.value)
+                      }
+                    >
+                      <option value="">Choose a size</option>
+                      {product.variants.map((variant) => (
+                        <option 
+                          key={variant.id} 
+                          value={variant.id}
+                          disabled={variant.stock === 0}
+                        >
+                          {variant.size || 'Default'} – KES {parseFloat(variant.price).toLocaleString()}
+                          {variant.stock === 0 ? ' (Out of Stock)' : ` (${variant.stock} in stock)`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Price Display */}
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600">Starting from</p>
+                  <p className="font-bold text-xl">
+                    <span className="text-emerald-700">
+                      KES {minPrice.toLocaleString()}
+                    </span>
+                  </p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-2 mt-auto">
+                  <button
+                    onClick={() => handleAddToCart(product)}
+                    className="flex-1 py-2 px-4 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                  >
+                    Add to Cart
+                  </button>
+                  <button
+                    onClick={() => handleBuyNow(product)}
+                    className="flex-1 py-2 px-4 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2"
+                  >
+                    Buy Now
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

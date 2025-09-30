@@ -1,6 +1,7 @@
 // src/pages/About.jsx
 import React from "react";
 import { Title, Meta } from "react-head";
+import nursery from "../assets/nursery.jpg";
 
 const About = () => {
   return (
@@ -32,7 +33,7 @@ const About = () => {
         {/* Image */}
         <div>
           <img
-            src="/images/greenscape.jpg"
+            src= {nursery}
             alt="Karathi Greenscape nursery"
             className="rounded-2xl shadow-lg w-full object-cover"
           />

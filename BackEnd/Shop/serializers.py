@@ -25,6 +25,7 @@ class ProductSerializer(serializers.ModelSerializer):
             "name",
             "description",
             "category",
+            "image",
             "variants",
             "price",         # added here
             "created_at",

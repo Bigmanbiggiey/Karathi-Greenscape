@@ -30,7 +30,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    "daa2299b7eef.ngrok-free.app",
+    "33c88954cc0a.ngrok-free.app",
 ]
 
 
@@ -181,7 +181,7 @@ MPESA_CONSUMER_KEY = "0uIRCid8LtZKc3W3fnRWCGZznK7pDEtiNLYKqqJyviupHAwK"
 MPESA_CONSUMER_SECRET = "2bLTBBPbiSBjd7OhkeIGBYNxCQt21A1cZuo97GRGJ3Q6XjLIqadCZI9wGF9nLwKW"
 MPESA_SHORTCODE = "174379"  # sandbox shortcode
 MPESA_PASSKEY = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
-MPESA_CALLBACK_URL = os.getenv("https://daa2299b7eef.ngrok-free.app /api/payment/payments/callback/")
+MPESA_CALLBACK_URL = os.getenv("https://33c88954cc0a.ngrok-free.app /api/payment/payments/callback/")
 
 LOGGING = {
     "version": 1,
@@ -204,3 +204,6 @@ LOGGING = {
         },
     },
 }
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
