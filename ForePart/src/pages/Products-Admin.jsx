@@ -12,6 +12,7 @@ const ProductsAdmin = () => {
   const [variants, setVariants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
   
   const [newProduct, setNewProduct] = useState({
     name: "",
@@ -29,6 +30,8 @@ const ProductsAdmin = () => {
     stock: "",
   });
 
+  const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
+
   // Available categories
   const categories = [
     "flowers",
@@ -40,20 +43,25 @@ const ProductsAdmin = () => {
     "other"
   ];
 
-  // Check if user is authorized (admin or staff)
+  // Redirect unauthorized users - CHECK ONLY ONCE
+  useEffect(() => {
+    if (!authLoading && !hasCheckedAuth) {
+      const isAuthorized = user && (user.user_type === 'admin' || user.user_type === 'staff');
+      
+      if (!isAuthorized) {
+        alert("Access denied. Only admin and staff can access this page.");
+        navigate("/");
+      }
+      setHasCheckedAuth(true); // Mark as checked
+    }
+  }, [authLoading, user, hasCheckedAuth, navigate]);
+
+  // Determine if user is authorized
   const isAuthorized = user && (user.user_type === 'admin' || user.user_type === 'staff');
 
-  // Redirect unauthorized users
+    // Load products when authorized
   useEffect(() => {
-    if (!authLoading && !isAuthorized) {
-      alert("Access denied. Only admin and staff can access this page.");
-      navigate("/");
-    }
-  }, [user, authLoading, isAuthorized, navigate]);
-
-  // Load products + variants
-  useEffect(() => {
-    if (isAuthorized) {
+    if (isAuthorized && !authLoading) {
       const fetchData = async () => {
         try {
           const [prodRes, varRes] = await Promise.all([
@@ -69,9 +77,34 @@ const ProductsAdmin = () => {
         }
       };
       fetchData();
+    } else if (!authLoading && !isAuthorized) {
+      setLoading(false);
     }
-  }, [isAuthorized]);
+  }, [isAuthorized, authLoading]);
 
+  // Show loading while auth is being checked
+  if (authLoading || !hasCheckedAuth) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-lg">Checking authentication...</p>
+      </div>
+    );
+  }
+
+  // Don't render if not authorized
+  if (!isAuthorized) {
+    return null;
+  }
+
+  // Show loading while fetching data
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-lg">Loading products...</p>
+      </div>
+    );
+  }
+  
   // Add Product
   const handleAddProduct = async (e) => {
     e.preventDefault();
@@ -435,206 +468,231 @@ const ProductsAdmin = () => {
         </div>
       </div>
 
-      {/* Edit Product Form */}
+     {/* 🔥 Edit Product Popup Modal */}
       {editingProduct && (
-        <div className="bg-white p-6 rounded-lg shadow-md border-2 border-yellow-400">
-          <h2 className="text-xl font-semibold mb-4 text-yellow-700">
-            Edit Product
-          </h2>
-          <form onSubmit={handleUpdateProduct} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Product Name
-              </label>
-              <input
-                type="text"
-                value={editingProduct.name}
-                onChange={(e) =>
-                  setEditingProduct({ ...editingProduct, name: e.target.value })
-                }
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-yellow-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <textarea
-                value={editingProduct.description}
-                onChange={(e) =>
-                  setEditingProduct({
-                    ...editingProduct,
-                    description: e.target.value,
-                  })
-                }
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-yellow-500"
-                rows="3"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category
-              </label>
-              <select
-                value={editingProduct.category}
-                onChange={(e) =>
-                  setEditingProduct({
-                    ...editingProduct,
-                    category: e.target.value,
-                  })
-                }
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-yellow-500"
-                required
-              >
-                <option value="">Select Category</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Update Product Image
-              </label>
-              {editingProduct.image && typeof editingProduct.image === 'string' && (
-                <div className="mb-2">
-                  <img
-                    src={editingProduct.image}
-                    alt="Current"
-                    className="h-32 w-32 object-cover rounded-lg border border-gray-200"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Current image</p>
-                </div>
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) =>
-                  setEditingProduct({
-                    ...editingProduct,
-                    image: e.target.files[0],
-                  })
-                }
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-yellow-500"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Leave empty to keep current image
-              </p>
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                className="flex-1 bg-green-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-700 transition"
-              >
-                Save Changes
-              </button>
-              <button
-                type="button"
-                onClick={() => setEditingProduct(null)}
-                className="flex-1 bg-gray-400 text-white px-6 py-2 rounded-lg font-semibold hover:bg-gray-500 transition"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg relative">
+            <button
+              onClick={() => setEditingProduct(null)}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-lg"
+            >
+              ✕
+            </button>
+            <h2 className="text-xl font-semibold mb-4 text-yellow-700">
+              Edit Product
+            </h2>
+            <form onSubmit={handleUpdateProduct} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Product Name
+                </label>
+                <input
+                  type="text"
+                  value={editingProduct.name}
+                  onChange={(e) =>
+                    setEditingProduct({
+                      ...editingProduct,
+                      name: e.target.value,
+                    })
+                  }
+                  className="w-full border rounded-lg px-4 py-2"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Description
+                </label>
+                <textarea
+                  value={editingProduct.description}
+                  onChange={(e) =>
+                    setEditingProduct({
+                      ...editingProduct,
+                      description: e.target.value,
+                    })
+                  }
+                  className="w-full border rounded-lg px-4 py-2"
+                  rows="3"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Category
+                </label>
+                <select
+                  value={editingProduct.category}
+                  onChange={(e) =>
+                    setEditingProduct({
+                      ...editingProduct,
+                      category: e.target.value,
+                    })
+                  }
+                  className="w-full border rounded-lg px-4 py-2"
+                  required
+                >
+                  <option value="">Select Category</option>
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Update Image
+                </label>
+                {editingProduct.image &&
+                  typeof editingProduct.image === "string" && (
+                    <img
+                      src={editingProduct.image}
+                      alt="Current"
+                      className="h-24 w-24 object-cover rounded mb-2"
+                    />
+                  )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) =>
+                    setEditingProduct({
+                      ...editingProduct,
+                      image: e.target.files[0],
+                    })
+                  }
+                  className="w-full border rounded-lg px-4 py-2"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                >
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingProduct(null)}
+                  className="flex-1 bg-gray-400 text-white px-4 py-2 rounded-lg hover:bg-gray-500"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
-      {/* Add Variant Form */}
-      <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
-        <h2 className="text-xl font-semibold mb-4 text-emerald-800">
-          Add Product Variant
-        </h2>
-        <form onSubmit={handleAddVariant} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Select Product
-            </label>
-            <select
-              value={newVariant.product}
-              onChange={(e) =>
-                setNewVariant({ ...newVariant, product: e.target.value })
-              }
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500"
-              required
-            >
-              <option value="">Select Product</option>
-              {products.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Size/Variant Name
-            </label>
-            <input
-              type="text"
-              placeholder="e.g., Small, Medium, Large"
-              value={newVariant.size}
-              onChange={(e) =>
-                setNewVariant({ ...newVariant, size: e.target.value })
-              }
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Price (KES)
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                value={newVariant.price}
-                onChange={(e) =>
-                  setNewVariant({ ...newVariant, price: e.target.value })
-                }
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Initial Stock
-              </label>
-              <input
-                type="number"
-                placeholder="0"
-                value={newVariant.stock}
-                onChange={(e) =>
-                  setNewVariant({ ...newVariant, stock: e.target.value })
-                }
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500"
-                required
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            className="w-full bg-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-700 transition"
-          >
-            Add Variant
-          </button>
-        </form>
+      {/* Add Variant Modal Trigger */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => setIsVariantModalOpen(true)}
+          className="bg-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-700 transition"
+        >
+          + Add Product Variant
+        </button>
       </div>
+
+      {/* Add Variant Modal */}
+      {isVariantModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+            <h2 className="text-xl font-semibold mb-4 text-emerald-800">
+              Add Product Variant
+            </h2>
+            <form onSubmit={handleAddVariant} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Select Product
+                </label>
+                <select
+                  value={newVariant.product}
+                  onChange={(e) =>
+                    setNewVariant({ ...newVariant, product: e.target.value })
+                  }
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500"
+                  required
+                >
+                  <option value="">Select Product</option>
+                  {products.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Size/Variant Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., Small, Medium, Large"
+                  value={newVariant.size}
+                  onChange={(e) =>
+                    setNewVariant({ ...newVariant, size: e.target.value })
+                  }
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Price (KES)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={newVariant.price}
+                    onChange={(e) =>
+                      setNewVariant({ ...newVariant, price: e.target.value })
+                    }
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Initial Stock
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="0"
+                    value={newVariant.stock}
+                    onChange={(e) =>
+                      setNewVariant({ ...newVariant, stock: e.target.value })
+                    }
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  type="submit"
+                  className="flex-1 bg-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-700 transition"
+                >
+                  Add Variant
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsVariantModalOpen(false)}
+                  className="flex-1 bg-gray-400 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-500 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
 
 export default ProductsAdmin;

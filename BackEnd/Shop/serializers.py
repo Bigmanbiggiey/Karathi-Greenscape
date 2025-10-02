@@ -105,10 +105,9 @@ class OrderSerializer(serializers.ModelSerializer):
         return super().to_representation(instance)
 
 
-class RestockSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProductVariant
-        fields = ["id", "product", "price", "stock"]
+class RestockSerializer(serializers.Serializer):
+    variant_id = serializers.IntegerField()
+    amount = serializers.IntegerField(min_value=1)
 
 
 class AuditLogSerializer(serializers.ModelSerializer):

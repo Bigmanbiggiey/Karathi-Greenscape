@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from pathlib import Path
 from datetime import timedelta
+from dotenv import load_dotenv
 from rest_framework.settings import api_settings
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -165,8 +166,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    'ROTATE_REFRESH_TOKENS': True,
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ("Bearer",),
     "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
@@ -176,12 +177,21 @@ SIMPLE_JWT = {
 
 AUTH_USER_MODEL = "Auth.CustomUser"
 
+load_dotenv()
+
 # MPesa Sandbox / Production settings
-MPESA_CONSUMER_KEY = "0uIRCid8LtZKc3W3fnRWCGZznK7pDEtiNLYKqqJyviupHAwK"
-MPESA_CONSUMER_SECRET = "2bLTBBPbiSBjd7OhkeIGBYNxCQt21A1cZuo97GRGJ3Q6XjLIqadCZI9wGF9nLwKW"
-MPESA_SHORTCODE = "174379"  # sandbox shortcode
-MPESA_PASSKEY = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"
-MPESA_CALLBACK_URL = os.getenv("https://33c88954cc0a.ngrok-free.app /api/payment/payments/callback/")
+MPESA_CONSUMER_KEY = os.getenv("MPESA_CONSUMER_KEY")
+MPESA_CONSUMER_SECRET = os.getenv("MPESA_CONSUMER_SECRET")
+MPESA_SHORTCODE = os.getenv("MPESA_SHORTCODE")
+MPESA_PASSKEY = os.getenv("MPESA_PASSKEY")
+MPESA_CALLBACK_URL = os.getenv("MPESA_CALLBACK_URL")
+MPESA_ENVIRONMENT = os.getenv("MPESA_ENVIRONMENT", "sandbox")  # sandbox or production
+
+# Airtel Money Configuration
+AIRTEL_CLIENT_ID = os.getenv("AIRTEL_CLIENT_ID")
+AIRTEL_CLIENT_SECRET = os.getenv("AIRTEL_CLIENT_SECRET")
+AIRTEL_API_KEY = os.getenv("AIRTEL_API_KEY")
+AIRTEL_ENV = os.getenv("AIRTEL_ENV", "staging")  # staging or production
 
 LOGGING = {
     "version": 1,

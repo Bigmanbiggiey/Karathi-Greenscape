@@ -9,8 +9,12 @@ export default function AuthProvider({ children }) {
   const [user, setUser] = useState(() =>
     JSON.parse(localStorage.getItem("user"))
   );
-  const [accessToken, setAccessToken] = useState(localStorage.getItem("accessToken"));
-  const [refreshToken, setRefreshToken] = useState(localStorage.getItem("refreshToken"));
+  const [accessToken, setAccessToken] = useState(
+    localStorage.getItem("accessToken")
+  );
+  const [refreshToken, setRefreshToken] = useState(
+    localStorage.getItem("refreshToken")
+  );
   const [loading, setLoading] = useState(true);
   const refreshingRef = useRef(false); // Prevent multiple simultaneous refreshes
 
@@ -22,10 +26,7 @@ export default function AuthProvider({ children }) {
       if (refreshToken) {
         await fetch(`${API_BASE}/logout/`, {
           method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}` 
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ refresh: refreshToken }),
         });
       }
@@ -40,8 +41,9 @@ export default function AuthProvider({ children }) {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
-    navigate("/login");
-  }, [accessToken, refreshToken, navigate]);
+
+    navigate("/login", { replace: true });
+  }, [refreshToken, navigate]);
 
   // 🟢 Refresh token
   const refreshTokenFunc = useCallback(async () => {
@@ -56,28 +58,30 @@ export default function AuthProvider({ children }) {
         body: JSON.stringify({ refresh: refreshToken }),
       });
 
-      if (!res.ok) {
+      if (res.status === 200) {
+        const data = await res.json();
+        setAccessToken(data.access);
+        localStorage.setItem("accessToken", data.access);
+
+        // Fetch profile with new token
+        const profileRes = await fetch(`${API_BASE}/profile/`, {
+          headers: { Authorization: `Bearer ${data.access}` },
+        });
+
+        if (profileRes.ok) {
+          const profileData = await profileRes.json();
+          setUser(profileData);
+          localStorage.setItem("user", JSON.stringify(profileData));
+        }
+      } else if (res.status === 401 || res.status === 403) {
+        console.warn("Refresh denied → logging out");
         logout();
-        return;
-      }
-
-      const data = await res.json();
-      setAccessToken(data.access);
-      localStorage.setItem("accessToken", data.access);
-
-      // Fetch profile with new token
-      const profileRes = await fetch(`${API_BASE}/profile/`, {
-        headers: { Authorization: `Bearer ${data.access}` },
-      });
-
-      if (profileRes.ok) {
-        const profileData = await profileRes.json();
-        setUser(profileData);
-        localStorage.setItem("user", JSON.stringify(profileData));
+      } else {
+        console.error("Unexpected refresh error:", res.status);
       }
     } catch (error) {
       console.error("Token refresh failed:", error);
-      logout();
+      // Don't logout on plain network errors
     } finally {
       refreshingRef.current = false;
       setLoading(false);
@@ -108,7 +112,7 @@ export default function AuthProvider({ children }) {
     [accessToken, refreshTokenFunc]
   );
 
-  // 🟢 On initial load - only run once
+  // 🟢 On initial load
   useEffect(() => {
     const initAuth = async () => {
       if (refreshToken && !refreshingRef.current) {
@@ -119,16 +123,16 @@ export default function AuthProvider({ children }) {
     };
 
     initAuth();
-  }, []); // Empty dependency array - only run once on mount
+  },[]); // run once on mount
 
-  // 🟢 Auto refresh every 4 minutes (only if we have a refresh token)
+  // 🟢 Auto refresh every 4 minutes
   useEffect(() => {
     if (!refreshToken) return;
-    
+
     const interval = setInterval(() => {
       refreshTokenFunc();
     }, 4 * 60 * 1000);
-    
+
     return () => clearInterval(interval);
   }, [refreshToken, refreshTokenFunc]);
 
@@ -143,16 +147,16 @@ export default function AuthProvider({ children }) {
     billing_address = "",
     key = "",
   }) => {
-    const bodyData = { 
-      username, 
-      email, 
-      password, 
+    const bodyData = {
+      username,
+      email,
+      password,
       first_name,
       last_name,
-      user_type, 
-      billing_address 
+      user_type,
+      billing_address,
     };
-    
+
     if (user_type === "admin") {
       bodyData.admin_key = key;
     } else if (user_type === "staff") {
