@@ -58,6 +58,8 @@ class MPesaService:
             'Authorization': f'Bearer {access_token}',
             'Content-Type': 'application/json'
         }
+
+        print(f"Callback URL being sent: {self.callback_url}")
         
         payload = {
             "BusinessShortCode": self.shortcode,
@@ -69,9 +71,11 @@ class MPesaService:
             "PartyB": self.shortcode,
             "PhoneNumber": phone_number,
             "CallBackURL": self.callback_url,
-            "AccountReference": account_reference,
+            "AccountReference": 'KARATHI GREENSCAPE',
             "TransactionDesc": transaction_desc
         }
         
+        print(f"Full payload: {payload}")
+
         response = requests.post(url, json=payload, headers=headers)
         return response.json()

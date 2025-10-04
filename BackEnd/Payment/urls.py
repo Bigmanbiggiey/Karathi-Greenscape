@@ -1,5 +1,4 @@
 from django.urls import path, include
-from .views import PaymentViewSet
 from . import admin_views, views
 
 urlpatterns = [

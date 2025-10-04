@@ -123,7 +123,7 @@ export default function AuthProvider({ children }) {
     };
 
     initAuth();
-  },[]); // run once on mount
+  } ); 
 
   // 🟢 Auto refresh every 4 minutes
   useEffect(() => {
