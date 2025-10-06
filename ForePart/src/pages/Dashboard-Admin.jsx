@@ -234,7 +234,7 @@ export default function AdminDashboard() {
           {/* Quick Links */}
           <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
             <a
-              href="/admin/products"
+              href="/pages/Products-Admin.jsx"
               className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition border-t-4 border-emerald-500"
             >
               <h4 className="font-semibold text-lg mb-2">Manage Products</h4>
