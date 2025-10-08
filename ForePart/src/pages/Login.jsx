@@ -1,10 +1,11 @@
 // src/pages/Login.jsx
 import React, { useState, useContext } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams, Link } from "react-router-dom";
 import { Title, Meta } from "react-head";
 import { AuthContext } from "../context/AuthContext";
 
 const Login = () => {
+  const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { login } = useContext(AuthContext);
@@ -23,13 +24,19 @@ const Login = () => {
 
     try {
       // Call login function from AuthContext
-      await login(email, password);
+      const userData = await login(email, password);
       
-      // Get the 'next' parameter from URL (where user wanted to go before being redirected to login)
-      const nextPath = searchParams.get("next") || "/";
+      // Determine redirect path
+      // Priority: 1) location.state.from (PrivateRoute redirect)
+      //          2) searchParams 'next' (manual redirect)
+      //          3) Role-based default
+      const from = location.state?.from?.pathname ||
+                   searchParams.get("next") ||
+                   (userData.user_type === 'admin' ? '/admin/dashboard' :
+                    userData.user_type === 'staff' ? '/staff/dashboard' : '/');
       
-      // Redirect user back to their intended destination
-      navigate(nextPath);
+      // Redirect user
+      navigate(from, { replace: true });
     } catch (err) {
       // Display error message to user
       setError(err.message || "Login failed. Please check your credentials.");

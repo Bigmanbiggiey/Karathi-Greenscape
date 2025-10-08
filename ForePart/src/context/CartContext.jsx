@@ -37,7 +37,10 @@ const CartProvider = ({ children }) => {
   };
 
   // Clear cart
-  const clearCart = () => setCart([]);
+  const clearCart = () => {
+    setCart([]);
+    localStorage.removeItem('cart');
+  };  
 
   // Cart totals
   const subtotal = cart.reduce(

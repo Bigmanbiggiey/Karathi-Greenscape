@@ -3,6 +3,7 @@ import MainLayout from "./layouts/MainLayout";
 import AdminLayout from "./layouts/AdminLayout";
 import StaffLayout from "./layouts/StaffLayout";
 import PrivateRoute from "./components/ProtectedRoute";
+import NotFound from "./pages/NotFound";
 
 // Main site pages
 import Home from "./pages/Home";
