@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { AuthContext } from "./AuthContext";
 import { useNavigate } from "react-router-dom";
 
@@ -58,30 +58,28 @@ export default function AuthProvider({ children }) {
         body: JSON.stringify({ refresh: refreshToken }),
       });
 
-      if (res.status === 200) {
-        const data = await res.json();
+      const text = await res.text(); // read body once
+      let data = null;
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch (err) {
+        console.error("Invalid JSON in refresh response:", err);
+      }
+
+      if (res.status === 200 && data?.access) {
         setAccessToken(data.access);
         localStorage.setItem("accessToken", data.access);
 
         // Fetch profile with new token
-        const profileRes = await fetch(`${API_BASE}/profile/`, {
-          headers: { Authorization: `Bearer ${data.access}` },
-        });
-
-        if (profileRes.ok) {
-          const profileData = await profileRes.json();
-          setUser(profileData);
-          localStorage.setItem("user", JSON.stringify(profileData));
-        }
+        await fetchProfile(data.access);
       } else if (res.status === 401 || res.status === 403) {
         console.warn("Refresh denied → logging out");
         logout();
       } else {
-        console.error("Unexpected refresh error:", res.status);
+        console.error("Unexpected refresh error:", res.status, text);
       }
     } catch (error) {
       console.error("Token refresh failed:", error);
-      // Don't logout on plain network errors
     } finally {
       refreshingRef.current = false;
       setLoading(false);
@@ -112,30 +110,6 @@ export default function AuthProvider({ children }) {
     [accessToken, refreshTokenFunc]
   );
 
-  // 🟢 On initial load
-  useEffect(() => {
-    const initAuth = async () => {
-      if (refreshToken && !refreshingRef.current) {
-        await refreshTokenFunc();
-      } else {
-        setLoading(false);
-      }
-    };
-
-    initAuth();
-  } ); 
-
-  // 🟢 Auto refresh every 4 minutes
-  useEffect(() => {
-    if (!refreshToken) return;
-
-    const interval = setInterval(() => {
-      refreshTokenFunc();
-    }, 4 * 60 * 1000);
-
-    return () => clearInterval(interval);
-  }, [refreshToken, refreshTokenFunc]);
-
   // 🟢 Register
   const signup = async ({
     username,
@@ -157,11 +131,8 @@ export default function AuthProvider({ children }) {
       billing_address,
     };
 
-    if (user_type === "admin") {
-      bodyData.admin_key = key;
-    } else if (user_type === "staff") {
-      bodyData.staff_key = key;
-    }
+    if (user_type === "admin") bodyData.admin_key = key;
+    else if (user_type === "staff") bodyData.staff_key = key;
 
     const res = await fetch(`${API_BASE}/register/`, {
       method: "POST",
@@ -219,6 +190,7 @@ export default function AuthProvider({ children }) {
         login,
         logout,
         fetchProfile,
+        refreshTokenFunc,
       }}
     >
       {children}

@@ -1,21 +1,22 @@
-import React, { useContext } from "react";
-import { Navigate } from "react-router-dom";
-import { AuthContext } from "../context/authContext";
 
-export default function PrivateRoute({ children }) {
-  const { user, loading } = useContext(AuthContext);
+import React from "react";
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-gray-600">Loading...</p>
-      </div>
-    );
-  }
+export default function PrivateRoute({ allowedRoles }) {
+  const { user, isAuthenticated, loading } = useAuth();
 
-  if (!user) {
+  if (loading) return <div>Loading...</div>;
+
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  return children;
+  // If roles are specified, check user type
+  if (allowedRoles && !allowedRoles.includes(user?.user_type)) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <Outlet />;
 }
+

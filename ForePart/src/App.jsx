@@ -1,62 +1,79 @@
-// src/App.jsx
 import { Routes, Route } from "react-router-dom";
-import { HeadProvider } from "react-head";
-import AuthProvider from "./context/AuthProvider";
-import CartProvider from "./context/CartContext";
+import MainLayout from "./layouts/MainLayout";
+import AdminLayout from "./layouts/AdminLayout";
+import StaffLayout from "./layouts/StaffLayout";
+import PrivateRoute from "./components/ProtectedRoute";
 
-// Components
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
-
-// Pages
+// Main site pages
 import Home from "./pages/Home";
 import Shop from "./pages/Shop";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import CartAndCheckout from "./pages/CartAndCheckout";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Logout from "./pages/Logout";
+import Cart from "./pages/CartAndCheckout";
 import Profile from "./pages/Profile";
-// Admin Pages
-import Dashboard from './pages/Dashboard-Admin';
-import Orders from './pages/Orders-Admin';
-import Products from './pages/Products-Admin';
-import Users from './pages/Users-Admin';
-import Vendors from './pages/Vendors-Admin';
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+
+// Admin pages
+import AdminDashboard from "./pages/admin/Dashboard-Admin";
+import ProductsAdmin from "./pages/admin/Products-Admin";
+import OrdersAdmin from "./pages/admin/Orders-Admin";
+import UsersAdmin from "./pages/admin/Users-Admin";
+import PaymentsAdmin from "./pages/admin/Payment-Admin";
+import AuditLogsAdmin from "./pages/admin/Audit-Logs";
+
+// Staff pages
+import StaffDashboard from "./pages/staff/StaffDashboard";
 
 function App() {
   return (
-    <HeadProvider>
-      <AuthProvider>
-        <CartProvider>
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
+      <Routes>
+        {/* Main Site Routes - WITH Navbar & Footer */}
+        <Route element={<MainLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/shop" element={<Shop />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+        </Route>
 
-            <main className="flex-grow">
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/shop" element={<Shop />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/cart" element={<CartAndCheckout />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/logout" element={<Logout />} />
-                <Route path="/dashboard" element={<Dashboard />}/>
-                <Route path="/orders" element={<Orders />}/>
-                <Route path="/products" element={<Products />}/>
-                <Route path="/users" element={<Users />}/>
-                <Route path="/vendors" element={<Vendors />}/>
-                <Route path="/profile" element={<Profile />}/>
-              </Routes>
-            </main>
+        {/* Protected Customer Routes */} 
+          <Route element={<PrivateRoute allowedRoles={['customer', 'staff', 'admin']} />}> 
+            <Route element ={<MainLayout />}>
+              <Route path="/cart" element={<Cart />} />
+              <Route path="/profile" element={<Profile />} />
+            </Route> 
+          </Route>
+        
 
-            <Footer />
-          </div>
-        </CartProvider>
-      </AuthProvider>
-    </HeadProvider>
+        {/* Admin Routes - Admin Sidebar & Navbar */}
+        <Route element={<PrivateRoute allowedRoles={["admin"]} />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="products" element={<ProductsAdmin />} />
+            <Route path="orders" element={<OrdersAdmin />} />
+            <Route path="users" element={<UsersAdmin />} />
+            <Route path="payments" element={<PaymentsAdmin />} />
+            <Route path="audit-logs" element={<AuditLogsAdmin />} />
+          </Route>
+        </Route>
+        
+
+        {/* Staff Routes - Staff Sidebar & Navbar */}
+        <Route element={<PrivateRoute allowedRoles={["staff"]} />}>
+          <Route path="/staff" element={<StaffLayout />}>
+            <Route index element={<StaffDashboard />} />
+            <Route path="dashboard" element={<StaffDashboard />} />
+            <Route path="products" element={<ProductsAdmin />} />
+            <Route path="orders" element={<OrdersAdmin />} />
+          </Route>
+        </Route>
+
+        {/* 404 Route */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
   );
 }
 
