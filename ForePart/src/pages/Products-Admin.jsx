@@ -1,8 +1,8 @@
 // src/pages/admin/ProductsAdmin.jsx
 import React, { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../api/api";
-import { AuthContext } from "../../context/AuthContext";
+import api from "../api/api";
+import { AuthContext } from "../context/AuthContext";
 
 const ProductsAdmin = () => {
   const navigate = useNavigate();

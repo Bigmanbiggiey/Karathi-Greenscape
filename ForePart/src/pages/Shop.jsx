@@ -12,8 +12,8 @@ const Shop = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedVariants, setSelectedVariants] = useState({});
-  const [selectedCategory, setSelectedCategory] = useState("all"); // Category filter
-  const [categories, setCategories] = useState([]); // Available categories
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [categories, setCategories] = useState([]);
 
   // Context and navigation hooks
   const { addToCart } = useCart();
@@ -21,47 +21,30 @@ const Shop = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // At the top of Shop component
-useEffect(() => {
-  const fetchProducts = async () => {
-    try {
-      if (!API_BASE) {
-        throw new Error("API_BASE is not configured. Check your .env file.");
-      }
-      
-      const res = await fetch(`${API_BASE}/api/shop/products/`);
-      if (!res.ok) throw new Error("Failed to load products");
-      const data = await res.json();
-      
-      // Validate data
-      if (!Array.isArray(data)) {
-        throw new Error("Invalid products data format");
-      }
-      
-      setProducts(data);
-    } catch (err) {
-      console.error("Fetch error:", err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-  fetchProducts();
-}, []);
-  
-  // Fetch products from API on component mount
+  // Fetch products from API on component mount - SINGLE useEffect
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        if (!API_BASE) {
+          throw new Error("API_BASE is not configured. Check your .env file.");
+        }
+        
         const res = await fetch(`${API_BASE}/api/shop/products/`);
         if (!res.ok) throw new Error("Failed to load products");
         const data = await res.json();
+        
+        // Validate data
+        if (!Array.isArray(data)) {
+          throw new Error("Invalid products data format");
+        }
+        
         setProducts(data);
 
         // Extract unique categories from products
         const uniqueCategories = [...new Set(data.map(p => p.category))];
         setCategories(uniqueCategories);
       } catch (err) {
+        console.error("Fetch error:", err);
         setError(err.message);
       } finally {
         setLoading(false);

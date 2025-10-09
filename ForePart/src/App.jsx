@@ -17,7 +17,7 @@ import Contact from "./pages/Contact";
 
 // Admin pages
 import AdminDashboard from "./pages/admin/Dashboard-Admin";
-import ProductsAdmin from "./pages/admin/Products-Admin";
+import ProductsAdmin from "./pages/Products-Admin";
 import OrdersAdmin from "./pages/admin/Orders-Admin";
 import UsersAdmin from "./pages/admin/Users-Admin";
 import PaymentsAdmin from "./pages/admin/Payment-Admin";
