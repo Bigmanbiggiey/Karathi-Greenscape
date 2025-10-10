@@ -87,28 +87,42 @@ export default function AuthProvider({ children }) {
   }, [refreshToken, logout]);
 
   // 🟢 Fetch profile
-  const fetchProfile = useCallback(
-    async (token = accessToken) => {
-      if (!token) return;
+const fetchProfile = useCallback(
+  async (token) => {
+    const currentToken = token || accessToken;
+    if (!currentToken) {
+      console.warn("No access token available for profile fetch.");
+      return;
+    }
 
-      try {
-        const res = await fetch(`${API_BASE}/profile/`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+    try {
+      const res = await fetch(`${API_BASE}/profile/`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${currentToken}`, // ✅ Include token here
+        },
+      });
 
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data);
-          localStorage.setItem("user", JSON.stringify(data));
-        } else if (res.status === 401) {
-          await refreshTokenFunc();
-        }
-      } catch (error) {
-        console.error("Fetch profile failed:", error);
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data);
+        localStorage.setItem("user", JSON.stringify(data));
+        console.log("✅ Profile fetched successfully:", data);
+      } else if (res.status === 401) {
+        console.warn("⚠️ Access token expired. Refreshing...");
+        await refreshTokenFunc();
+      } else {
+        const text = await res.text();
+        console.error(`❌ Profile fetch failed [${res.status}]:`, text);
       }
-    },
-    [accessToken, refreshTokenFunc]
-  );
+    } catch (error) {
+      console.error("❌ Fetch profile failed:", error);
+    }
+  },
+  [accessToken, refreshTokenFunc]
+);
+
 
   // 🟢 Register
   const signup = async ({
