@@ -43,7 +43,7 @@ export default function AuthProvider({ children }) {
     localStorage.removeItem("user");
 
     navigate("/login", { replace: true });
-  }, [refreshToken, navigate]);
+  }, );
 
   // 🟢 Refresh token
   const refreshTokenFunc = useCallback(async () => {
