@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { AuthContext } from "./AuthContext";
 import { useNavigate } from "react-router-dom";
 
@@ -15,7 +15,7 @@ export default function AuthProvider({ children }) {
   const [refreshToken, setRefreshToken] = useState(
     localStorage.getItem("refreshToken")
   );
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Initial state is TRUE
   const refreshingRef = useRef(false); // Prevent multiple simultaneous refreshes
 
   const isAuthenticated = !!accessToken;
@@ -47,7 +47,7 @@ export default function AuthProvider({ children }) {
 
   // 🟢 Refresh token
   const refreshTokenFunc = useCallback(async () => {
-    if (!refreshToken || refreshingRef.current) return;
+    if (!refreshToken || refreshingRef.current) return null;
 
     refreshingRef.current = true;
 
@@ -69,9 +69,9 @@ export default function AuthProvider({ children }) {
       if (res.status === 200 && data?.access) {
         setAccessToken(data.access);
         localStorage.setItem("accessToken", data.access);
-
-        // Fetch profile with new token
-        await fetchProfile(data.access);
+        
+        // IMPORTANT: Return the new token so other functions can use it immediately
+        return data.access; 
       } else if (res.status === 401 || res.status === 403) {
         console.warn("Refresh denied → logging out");
         logout();
@@ -82,47 +82,73 @@ export default function AuthProvider({ children }) {
       console.error("Token refresh failed:", error);
     } finally {
       refreshingRef.current = false;
-      setLoading(false);
     }
+    return null; // Return null on failure
   }, [refreshToken, logout]);
 
   // 🟢 Fetch profile
-const fetchProfile = useCallback(
-  async (token) => {
-    const currentToken = token || accessToken;
-    if (!currentToken) {
-      console.warn("No access token available for profile fetch.");
-      return;
-    }
-
-    try {
-      const res = await fetch(`${API_BASE}/profile/`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${currentToken}`, // ✅ Include token here
-        },
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data);
-        localStorage.setItem("user", JSON.stringify(data));
-        console.log("✅ Profile fetched successfully:", data);
-      } else if (res.status === 401) {
-        console.warn("⚠️ Access token expired. Refreshing...");
-        await refreshTokenFunc();
-      } else {
-        const text = await res.text();
-        console.error(`❌ Profile fetch failed [${res.status}]:`, text);
+  const fetchProfile = useCallback(
+    async (token) => {
+      const currentToken = token || accessToken;
+      if (!currentToken) {
+        console.warn("No access token available for profile fetch.");
+        return null;
       }
-    } catch (error) {
-      console.error("❌ Fetch profile failed:", error);
-    }
-  },
-  [accessToken, refreshTokenFunc]
-);
 
+      try {
+        const res = await fetch(`${API_BASE}/profile/`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${currentToken}`, // ✅ Include token here
+          },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data);
+          localStorage.setItem("user", JSON.stringify(data));
+          console.log("✅ Profile fetched successfully:", data);
+          return data;
+        } else if (res.status === 401) {
+          console.warn("⚠️ Access token expired. Refreshing...");
+          const newToken = await refreshTokenFunc();
+          if (newToken) {
+            // Retry profile fetch with the new token
+            return await fetchProfile(newToken);
+          }
+        } else {
+          const text = await res.text();
+          console.error(`❌ Profile fetch failed [${res.status}]:`, text);
+        }
+      } catch (error) {
+        console.error("❌ Fetch profile failed:", error);
+      }
+      return null;
+    },
+    [accessToken, refreshTokenFunc]
+  );
+
+  // 🔑 INITIAL AUTH CHECK EFFECT
+  useEffect(() => {
+    // Only run on mount
+    const initialAuthCheck = async () => {
+      // If we have an access token, try to fetch the profile
+      if (accessToken) {
+        // If user object is missing (e.g., initial load), fetch profile
+        if (!user) {
+          await fetchProfile(accessToken);
+        }
+      } 
+      // After any checks, stop the loading screen.
+      setLoading(false);
+    };
+
+    initialAuthCheck();
+    
+  // Note: We intentionally only want this to run on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps 
+  }, []);
 
   // 🟢 Register
   const signup = async ({
@@ -199,7 +225,7 @@ const fetchProfile = useCallback(
         isAuthenticated,
         accessToken,
         refreshToken,
-        loading,
+        loading, // This is what PrivateRoute checks
         signup,
         login,
         logout,

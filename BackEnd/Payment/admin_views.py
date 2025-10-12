@@ -13,7 +13,9 @@ def list_payments(request):
     List all payments, with optional filtering by status.
     """
     status_filter = request.query_params.get("status")
-    queryset = Payment.objects.all().select_related("order", "order__customer")
+    
+    # FIX: Changed 'order__customer' to 'order__user'
+    queryset = Payment.objects.all().select_related("order", "order__user") 
 
     if status_filter:
         queryset = queryset.filter(status=status_filter)
@@ -28,7 +30,8 @@ def payment_detail(request, payment_id):
     View details of a single payment.
     """
     try:
-        payment = Payment.objects.select_related("order", "order__customer").get(id=payment_id)
+        # FIX: Changed 'order__customer' to 'order__user'
+        payment = Payment.objects.select_related("order", "order__user").get(id=payment_id)
     except Payment.DoesNotExist:
         return Response({"error": "Payment not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -54,6 +57,7 @@ def reconcile_payment(request, payment_id):
     payment.status = new_status
     payment.save()
 
+    # NOTE: It's good practice to ensure 'Success'/'Failed' match case if model choices are strict
     if new_status == "Success":
         payment.order.status = "Processing"
         payment.order.save()

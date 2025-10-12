@@ -1,6 +1,13 @@
 from rest_framework import serializers
 from .models import Product, ProductVariant, Order, OrderItem, AuditLog
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
+
+class UserSerializerForOrder(serializers.ModelSerializer):
+    class Meta:
+        model= User
+        fields = ["id", "username", "first_name", "last_name"]
 
 class ProductVariantSerializer(serializers.ModelSerializer):
     # Ensure price is always numeric (default 0 if None)
@@ -52,12 +59,13 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    user = UserSerializerForOrder(read_only=True)
     items = OrderItemSerializer(many=True)
 
     class Meta:
         model = Order
         fields = ["id", "user", "items", "status", "total_price", "created_at"]
-        read_only_fields = ["id", "user", "total_price", "created_at", "status"]
+        read_only_fields = ["id", "total_price", "created_at", "status"]
 
     def _recalculate_total(self, order):
         """Utility method to recompute order total from items."""

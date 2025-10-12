@@ -15,6 +15,7 @@ import Cart from "./pages/CartAndCheckout";
 import Profile from "./pages/Profile";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import Logout from "./pages/Logout";
 
 // Admin pages
 import AdminDashboard from "./pages/admin/Dashboard-Admin";
@@ -38,6 +39,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/logout" element={<Logout />} />
         </Route>
 
         {/* Protected Customer Routes */} 

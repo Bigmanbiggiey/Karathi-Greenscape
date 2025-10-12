@@ -1,6 +1,5 @@
-// src/pages/admin/OrdersAdmin.jsx
 import React, { useEffect, useState } from "react";
-import api from "../../api/api"; 
+import api from "../../api/api";
 
 const OrdersAdmin = () => {
   const [orders, setOrders] = useState([]);
@@ -13,7 +12,8 @@ const OrdersAdmin = () => {
         const res = await api.get("/shop/orders/");
         setOrders(res.data);
       } catch (err) {
-        setError("Failed to load orders", err);
+        console.error("Error loading orders:", err);
+        setError("Failed to load orders. Check the console for details.");
       } finally {
         setLoading(false);
       }
@@ -23,7 +23,7 @@ const OrdersAdmin = () => {
 
   const handleStatusChange = async (id, newStatus) => {
     try {
-      await api.post(`/shop/orders/${id}/set_status/`, { status: newStatus });
+      await api.post(`/shop/orders/${id}/set_status/`, { status: newStatus }); 
       setOrders(
         orders.map((o) =>
           o.id === id ? { ...o, status: newStatus } : o
@@ -31,7 +31,8 @@ const OrdersAdmin = () => {
       );
       alert(`Order #${id} updated to ${newStatus}`);
     } catch (err) {
-      alert("Failed to update status", err);
+      console.error("Failed to update status:", err.response?.data || err.message);
+      alert(`Failed to update status. Check console. Error: ${err.response?.status}`);
     }
   };
 
@@ -43,7 +44,8 @@ const OrdersAdmin = () => {
       );
       alert(`Order #${id} cancelled`);
     } catch (err) {
-      alert("Failed to cancel order", err);
+      console.error("Failed to cancel order:", err.response?.data || err.message);
+      alert(`Failed to cancel order. Check console. Error: ${err.response?.status}`);
     }
   };
 
@@ -58,7 +60,7 @@ const OrdersAdmin = () => {
         <thead>
           <tr className="bg-gray-100">
             <th className="p-2 border">ID</th>
-            <th className="p-2 border">User</th>
+            <th className="p-2 border">Customer</th>
             <th className="p-2 border">Status</th>
             <th className="p-2 border">Items</th>
             <th className="p-2 border">Actions</th>
@@ -68,12 +70,14 @@ const OrdersAdmin = () => {
           {orders.map((o) => (
             <tr key={o.id}>
               <td className="p-2 border">{o.id}</td>
-              <td className="p-2 border">{o.user}</td>
+              <td className="p-2 border">
+                {o.user ? `${o.user.first_name || ''} ${o.user.last_name || ''}`.trim() || o.user.username : 'N/A'}
+              </td>
               <td className="p-2 border">{o.status}</td>
               <td className="p-2 border">
                 {o.items.map((item) => (
                   <div key={item.id}>
-                    {item.variant} × {item.quantity}
+                    {item.variant.product.name || item.variant.size} × {item.quantity}
                   </div>
                 ))}
               </td>
