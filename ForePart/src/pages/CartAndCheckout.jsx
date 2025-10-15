@@ -24,7 +24,7 @@ const CartAndCheckout = () => {
     // Remove spaces and non-digit characters
     let cleaned = phone.replace(/\D/g, '');
     
-    // If starts with 0, replace with 254
+    // 
     if (cleaned.startsWith('0')) {
       cleaned = '254' + cleaned.substring(1);
     }
