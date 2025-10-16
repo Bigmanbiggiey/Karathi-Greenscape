@@ -1,4 +1,4 @@
-// src/pages/CartAndCheckout.jsx
+
 import React, { useState, useContext } from "react";
 import { Title, Meta } from "react-head";
 import { useNavigate } from "react-router-dom";
