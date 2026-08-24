@@ -15,6 +15,8 @@ from datetime import timedelta
 from dotenv import load_dotenv
 from rest_framework.settings import api_settings
 
+load_dotenv()
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -23,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-5s)^awpej@*#^)f_^1tp@a-n$g)2-ejv(!laz1%o7ndc*g2m$7'
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-5s)^awpej@*#^)f_^1tp@a-n$g)2-ejv(!laz1%o7ndc*g2m$7")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -174,8 +176,6 @@ SIMPLE_JWT = {
 }
 
 AUTH_USER_MODEL = "Auth.CustomUser"
-
-load_dotenv()
 
 # MPesa Sandbox / Production settings
 MPESA_CONSUMER_KEY = os.getenv("MPESA_CONSUMER_KEY")

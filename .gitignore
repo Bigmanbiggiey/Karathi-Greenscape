@@ -1,2 +1,4 @@
 BackEnd/.env
-/BackEnd
+BackEnd/error.log
+**/__pycache__/
+*.pyc
