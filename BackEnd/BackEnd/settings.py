@@ -14,6 +14,7 @@ from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
 from rest_framework.settings import api_settings
+import dj_database_url
 
 load_dotenv()
 
@@ -30,9 +31,7 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-5s)^awpej@*#^)f_^1t
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = [
-    "*"
-]
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",")
 
 
 # Application definition
@@ -112,14 +111,10 @@ WSGI_APPLICATION = 'BackEnd.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'KARATHI_GREENSCAPE_DB',
-        'USER': 'postgres',
-        'PASSWORD': '0000',
-        'HOST': 'localhost',
-        'PORT': '5433',
-    }
+    'default': dj_database_url.config(
+        default="postgresql://postgres:0000@localhost:5433/KARATHI_GREENSCAPE_DB",
+        conn_max_age=600,
+    )
 }
 
 
@@ -158,6 +153,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

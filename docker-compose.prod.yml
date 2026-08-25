@@ -1,0 +1,43 @@
+name: karathi
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - karathi_db_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./BackEnd
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - karathi_media:/app/media
+      - karathi_static:/app/staticfiles
+    depends_on:
+      - db
+
+  nginx:
+    build:
+      context: ./ForePart
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+    restart: unless-stopped
+    volumes:
+      - karathi_media:/usr/share/nginx/media:ro
+      - karathi_static:/usr/share/nginx/static:ro
+    depends_on:
+      - backend
+    networks:
+      - default
+      - server_backend
+
+volumes:
+  karathi_db_data:
+  karathi_media:
+  karathi_static:
+
+networks:
+  server_backend:
+    external: true
