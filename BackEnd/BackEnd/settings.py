@@ -26,12 +26,32 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-5s)^awpej@*#^)f_^1tp@a-n$g)2-ejv(!laz1%o7ndc*g2m$7")
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError(
+        "DJANGO_SECRET_KEY environment variable is not set. "
+        "Generate one and set it before starting Django."
+    )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "true"
 
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",")
+ALLOWED_HOSTS = [h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",") if h.strip()]
+
+# CSRF: comma-separated list of scheme://host origins trusted for unsafe requests.
+# Required for the Django admin when TLS terminates at an upstream proxy.
+CSRF_TRUSTED_ORIGINS = [
+    o.strip() for o in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()
+]
+
+# Deployed behind Cloudflare Tunnel -> Caddy -> nginx; TLS terminates at the edge
+# and the app is reached over plain HTTP on the internal Docker network.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Mark session/CSRF cookies Secure in production (set DJANGO_SECURE_COOKIES=True).
+_secure_cookies = os.getenv("DJANGO_SECURE_COOKIES", "False").lower() == "true"
+SESSION_COOKIE_SECURE = _secure_cookies
+CSRF_COOKIE_SECURE = _secure_cookies
 
 
 # Application definition
