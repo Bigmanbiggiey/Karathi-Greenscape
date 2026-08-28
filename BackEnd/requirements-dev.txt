@@ -1,0 +1,24 @@
+# Dev / test dependencies. Not installed in the production image.
+#   pip install -r requirements-dev.txt
+-r requirements.txt
+
+# Test runner
+pytest==8.4.1
+pytest-django==4.9.0
+iniconfig==2.1.0
+pluggy==1.6.0
+
+# Selenium / Trio E2E stack
+trio==0.30.0
+trio-websocket==0.12.2
+outcome==1.3.0.post0
+sniffio==1.3.1
+sortedcontainers==2.4.0
+wsproto==1.2.0
+h11==0.16.0
+PySocks==1.7.1
+
+# Local virtualenv tooling (harmless if already present)
+distlib==0.3.8
+filelock==3.15.4
+platformdirs==4.2.2

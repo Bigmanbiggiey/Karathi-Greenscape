@@ -1,5 +1,9 @@
 BackEnd/.env
 /.env
+ForePart/.env
+**/.env
+!**/.env.example
 BackEnd/error.log
+*.log
 **/__pycache__/
 *.pyc

@@ -37,6 +37,10 @@ if not SECRET_KEY:
 DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "true"
 
 ALLOWED_HOSTS = [h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",") if h.strip()]
+# Always allow loopback so container HEALTHCHECK / local probes don't 400.
+for _h in ("localhost", "127.0.0.1", "[::1]"):
+    if _h not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_h)
 
 # CSRF: comma-separated list of scheme://host origins trusted for unsafe requests.
 # Required for the Django admin when TLS terminates at an upstream proxy.
@@ -52,6 +56,23 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 _secure_cookies = os.getenv("DJANGO_SECURE_COOKIES", "False").lower() == "true"
 SESSION_COOKIE_SECURE = _secure_cookies
 CSRF_COOKIE_SECURE = _secure_cookies
+SESSION_COOKIE_HTTPONLY = True
+
+# Baseline security headers (SecurityMiddleware / clickjacking middleware).
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "same-origin"
+X_FRAME_OPTIONS = "DENY"
+
+# HSTS is opt-in via env (edge/CDN often owns this). Set DJANGO_HSTS_SECONDS to a
+# large value (e.g. 31536000) only once you are sure every host is HTTPS-only.
+_hsts_seconds = int(os.getenv("DJANGO_HSTS_SECONDS", "0"))
+SECURE_HSTS_SECONDS = _hsts_seconds
+SECURE_HSTS_INCLUDE_SUBDOMAINS = _hsts_seconds > 0
+SECURE_HSTS_PRELOAD = _hsts_seconds > 0
+
+# Keep Django's in-memory upload cap in step with nginx client_max_body_size (20m).
+DATA_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024
 
 
 # Application definition
@@ -93,10 +114,22 @@ REST_FRAMEWORK = {
      "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.AllowAny",
     ),
+    "DEFAULT_THROTTLE_CLASSES": (
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ),
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": os.getenv("DRF_THROTTLE_ANON", "60/min"),
+        "user": os.getenv("DRF_THROTTLE_USER", "600/min"),
+    },
 }
 
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_HEADERS = ['*']
+# Frontend is same-origin (served by nginx), so CORS is normally unneeded.
+# Wide-open only in local dev; in prod set CORS_ALLOWED_ORIGINS explicitly.
+CORS_ALLOWED_ORIGINS = [
+    o.strip() for o in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if o.strip()
+] or CSRF_TRUSTED_ORIGINS
+CORS_ALLOW_ALL_ORIGINS = DEBUG and not CORS_ALLOWED_ORIGINS
 CORS_ALLOW_METHODS = [
     "DELETE",
     "GET",
@@ -207,24 +240,41 @@ AIRTEL_CLIENT_SECRET = os.getenv("AIRTEL_CLIENT_SECRET")
 AIRTEL_API_KEY = os.getenv("AIRTEL_API_KEY")
 AIRTEL_ENV = os.getenv("AIRTEL_ENV", "staging")  # staging or production
 
+# Log to stdout/stderr only (12-factor); the container runtime captures it.
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {
-        "file": {
-            "level": "ERROR",
-            "class": "logging.FileHandler",
-            "filename": "error.log",
+    "formatters": {
+        "standard": {
+            "format": "%(asctime)s %(levelname)s %(name)s %(message)s",
         },
+    },
+    "handlers": {
         "console": {
             "class": "logging.StreamHandler",
+            "formatter": "standard",
         },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
     },
     "loggers": {
         "django": {
-            "handlers": ["file", "console"],
-            "level": "ERROR",
-            "propagate": True,
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "propagate": False,
+        },
+        "django.request": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        # Quiet the DisallowedHost noise from internal health/probe traffic.
+        "django.security.DisallowedHost": {
+            "handlers": ["console"],
+            "level": "CRITICAL",
+            "propagate": False,
         },
     },
 }
