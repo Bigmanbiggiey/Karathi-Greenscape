@@ -38,7 +38,8 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     total_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
-    
+    updated_at = models.DateTimeField(auto_now=True)
+
     # 🟢 NEW: Field to track the staff member who last modified the order status
     last_modified_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

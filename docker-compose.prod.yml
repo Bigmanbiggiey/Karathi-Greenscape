@@ -1,5 +1,10 @@
 name: karathi
 
+x-backend-image: &backend-image
+  build:
+    context: ./BackEnd
+  image: karathi-backend
+
 services:
   db:
     image: postgres:16-alpine
@@ -13,8 +18,21 @@ services:
       timeout: 5s
       retries: 10
 
+  # One-shot: run schema migrations once, then exit. The web service waits for
+  # this to complete, so scaling `backend` can never race migrations.
+  migrate:
+    <<: *backend-image
+    # Override the image ENTRYPOINT (entrypoint.sh runs collectstatic + gunicorn
+    # and ignores its args); this service must run migrate and then exit.
+    entrypoint: ["python", "manage.py", "migrate", "--noinput"]
+    restart: "no"
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+
   backend:
-    build: ./BackEnd
+    <<: *backend-image
     restart: unless-stopped
     env_file: .env
     volumes:
@@ -23,6 +41,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
   nginx:
     build:
@@ -34,7 +54,8 @@ services:
       - karathi_media:/usr/share/nginx/media:ro
       - karathi_static:/usr/share/nginx/static:ro
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - default
       - server_backend
