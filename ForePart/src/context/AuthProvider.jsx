@@ -218,6 +218,60 @@ export default function AuthProvider({ children }) {
     return { ...data.user, redirect_url };
   };
 
+  // 🟢 Request a password-reset email
+  const requestPasswordReset = async (email) => {
+    const res = await fetch(`${API_BASE}/password/reset/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.detail || "Could not send the reset email.");
+    return data;
+  };
+
+  // 🟢 Confirm a password reset with the uid + token from the emailed link
+  const confirmPasswordReset = async ({ uid, token, new_password }) => {
+    const res = await fetch(`${API_BASE}/password/reset/confirm/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ uid, token, new_password }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(
+        data.new_password?.[0] ||
+          data.token?.[0] ||
+          data.uid?.[0] ||
+          data.detail ||
+          "Could not reset your password."
+      );
+    }
+    return data;
+  };
+
+  // 🟢 Change password for the logged-in user
+  const changePassword = async ({ old_password, new_password }) => {
+    const res = await fetch(`${API_BASE}/password/change/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ old_password, new_password }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(
+        data.old_password?.[0] ||
+          data.new_password?.[0] ||
+          data.detail ||
+          "Could not change your password."
+      );
+    }
+    return data;
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -231,6 +285,9 @@ export default function AuthProvider({ children }) {
         logout,
         fetchProfile,
         refreshTokenFunc,
+        requestPasswordReset,
+        confirmPasswordReset,
+        changePassword,
       }}
     >
       {children}

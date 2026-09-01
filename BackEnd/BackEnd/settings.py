@@ -231,3 +231,38 @@ LOGGING = {
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# --- Email / SMTP ---------------------------------------------------------------
+# Used for transactional mail (password-reset links). Real SMTP is required in
+# production; under DEBUG we fall back to the console backend so local runs and
+# the test suite don't need credentials.
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True").lower() == "true"
+EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "False").lower() == "true"
+DEFAULT_FROM_EMAIL = os.getenv(
+    "DEFAULT_FROM_EMAIL", EMAIL_HOST_USER or "no-reply@karathi-demo.techbiggiey.org"
+)
+
+# Public base URL of the SPA, used to build links inside emails (no trailing slash).
+FRONTEND_URL = os.getenv(
+    "FRONTEND_URL", "https://karathi-demo.techbiggiey.org"
+).rstrip("/")
+
+_smtp_ready = bool(EMAIL_HOST and EMAIL_HOST_USER and EMAIL_HOST_PASSWORD)
+if _smtp_ready:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+elif DEBUG:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+else:
+    _missing = ", ".join(
+        name
+        for name in ("EMAIL_HOST", "EMAIL_HOST_USER", "EMAIL_HOST_PASSWORD")
+        if not os.getenv(name)
+    )
+    raise RuntimeError(
+        f"SMTP is not configured (missing: {_missing}). Set the EMAIL_* "
+        "environment variables, or run with DJANGO_DEBUG=True for the console backend."
+    )

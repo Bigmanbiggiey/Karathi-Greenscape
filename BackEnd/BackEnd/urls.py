@@ -5,7 +5,9 @@ from django.conf import settings
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # Django admin — developers only. Deliberately NOT at /admin/ so the React
+    # admin UI can own that path; lock this route down at the edge as well.
+    path('developer-admin/', admin.site.urls),
     path("api/admin/", include("Admin.urls")),
     path("api/auth/", include("Auth.urls")),
     path("api/payment/", include("Payment.urls")),

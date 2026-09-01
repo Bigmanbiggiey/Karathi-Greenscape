@@ -1,7 +1,12 @@
 from rest_framework import generics, status, viewsets, mixins, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
@@ -12,9 +17,14 @@ from .serializers import (
     LoginSerializer,
     ProfileSerializer,
     SessionSerializer,
+    PasswordResetRequestSerializer,
+    PasswordResetConfirmSerializer,
+    PasswordChangeSerializer,
 )
 from .permissions import IsAdminOrSelf
 import logging
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -186,7 +196,75 @@ class SessionView(APIView):
                 return Response({"error": "Session not found"}, status=404)
 
         return Response({"error": "Provide 'id' or 'all'"}, status=400)
-    
-    
-logger = logging.getLogger(__name__)
+
+
+# --- Password reset (request link by email) ---
+class PasswordResetRequestView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data["email"]
+
+        user = User.objects.filter(email__iexact=email).first()
+        if user:
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            reset_link = f"{settings.FRONTEND_URL}/reset-password?uid={uid}&token={token}"
+            try:
+                send_mail(
+                    subject="Reset your Karathi Greenscape password",
+                    message=(
+                        f"Hi {user.first_name or user.username},\n\n"
+                        "We received a request to reset your Karathi Greenscape "
+                        "password. Click the link below to choose a new one:\n\n"
+                        f"{reset_link}\n\n"
+                        "This link expires in a few hours. If you didn't request "
+                        "it, you can safely ignore this email.\n\n"
+                        "— Karathi Greenscape"
+                    ),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[user.email],
+                    fail_silently=False,
+                )
+            except Exception:
+                logger.error("Password reset email failed to send", exc_info=True)
+
+        # Identical response whether or not the account exists, so email
+        # addresses can't be enumerated through this endpoint.
+        return Response(
+            {"detail": "If an account exists for that email, a reset link is on its way."},
+            status=status.HTTP_200_OK,
+        )
+
+
+# --- Password reset (set new password using emailed token) ---
+class PasswordResetConfirmView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            {"detail": "Your password has been reset. You can now log in."},
+            status=status.HTTP_200_OK,
+        )
+
+
+# --- Password change (logged-in user) ---
+class PasswordChangeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = PasswordChangeSerializer(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            {"detail": "Password updated successfully."},
+            status=status.HTTP_200_OK,
+        )
 

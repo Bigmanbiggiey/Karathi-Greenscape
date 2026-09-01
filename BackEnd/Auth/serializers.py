@@ -1,5 +1,10 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model, authenticate
+from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.tokens import default_token_generator
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
 from Shop.models import Order
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 from Admin.models import AdminKey, StaffKey
@@ -154,6 +159,68 @@ class ProfileSerializer(serializers.ModelSerializer):
             })
 
         return history
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    """Step 1 of reset: user submits the email tied to their account."""
+    email = serializers.EmailField()
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    """Step 2 of reset: uid + token from the emailed link, plus the new password."""
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        try:
+            pk = force_str(urlsafe_base64_decode(data["uid"]))
+            user = User.objects.get(pk=pk)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            raise serializers.ValidationError({"uid": "Invalid reset link."})
+
+        if not default_token_generator.check_token(user, data["token"]):
+            raise serializers.ValidationError(
+                {"token": "This reset link is invalid or has expired."}
+            )
+
+        try:
+            validate_password(data["new_password"], user=user)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({"new_password": list(exc.messages)})
+
+        data["user"] = user
+        return data
+
+    def save(self, **kwargs):
+        user = self.validated_data["user"]
+        user.set_password(self.validated_data["new_password"])
+        user.save()
+        return user
+
+
+class PasswordChangeSerializer(serializers.Serializer):
+    """Logged-in user changing their own password from the profile page."""
+    old_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True)
+
+    def validate_old_password(self, value):
+        if not self.context["request"].user.check_password(value):
+            raise serializers.ValidationError("Current password is incorrect.")
+        return value
+
+    def validate_new_password(self, value):
+        try:
+            validate_password(value, user=self.context["request"].user)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages))
+        return value
+
+    def save(self, **kwargs):
+        user = self.context["request"].user
+        user.set_password(self.validated_data["new_password"])
+        user.save()
+        return user
+
 
 class SessionSerializer(serializers.ModelSerializer):
     blacklisted = serializers.SerializerMethodField()

@@ -2,10 +2,16 @@ import React, { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 
 export default function Profile() {
-  const { user, accessToken, fetchProfile } = useContext(AuthContext);
+  const { user, accessToken, fetchProfile, changePassword } = useContext(AuthContext);
   const [profile, setProfile] = useState(null);
   const [billingAddress, setBillingAddress] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // Change-password form
+  const [pwForm, setPwForm] = useState({ old_password: "", new_password: "", confirm: "" });
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwError, setPwError] = useState("");
+  const [pwSuccess, setPwSuccess] = useState("");
 
   // Fetch profile on mount
   useEffect(() => {
@@ -47,6 +53,32 @@ export default function Profile() {
       alert("Could not save billing address.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Change password
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPwError("");
+    setPwSuccess("");
+
+    if (pwForm.new_password !== pwForm.confirm) {
+      setPwError("New passwords do not match.");
+      return;
+    }
+
+    setPwSaving(true);
+    try {
+      await changePassword({
+        old_password: pwForm.old_password,
+        new_password: pwForm.new_password,
+      });
+      setPwSuccess("Password updated successfully.");
+      setPwForm({ old_password: "", new_password: "", confirm: "" });
+    } catch (err) {
+      setPwError(err.message || "Could not change your password.");
+    } finally {
+      setPwSaving(false);
     }
   };
 
@@ -95,6 +127,60 @@ export default function Profile() {
         >
           {saving ? "Saving..." : "Save"}
         </button>
+      </div>
+
+      {/* Change Password */}
+      <div className="mb-8 border-t pt-6">
+        <h3 className="text-xl font-bold mb-4">Change Password</h3>
+
+        {pwError && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg mb-3 text-sm">
+            {pwError}
+          </div>
+        )}
+        {pwSuccess && (
+          <div className="bg-green-50 border border-green-200 text-green-700 px-3 py-2 rounded-lg mb-3 text-sm">
+            {pwSuccess}
+          </div>
+        )}
+
+        <form onSubmit={handleChangePassword} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <input
+            type="password"
+            value={pwForm.old_password}
+            onChange={(e) => setPwForm({ ...pwForm, old_password: e.target.value })}
+            required
+            placeholder="Current password"
+            className="border rounded-lg p-2"
+          />
+          <input
+            type="password"
+            value={pwForm.new_password}
+            onChange={(e) => setPwForm({ ...pwForm, new_password: e.target.value })}
+            required
+            minLength={8}
+            placeholder="New password"
+            className="border rounded-lg p-2"
+          />
+          <input
+            type="password"
+            value={pwForm.confirm}
+            onChange={(e) => setPwForm({ ...pwForm, confirm: e.target.value })}
+            required
+            minLength={8}
+            placeholder="Confirm new password"
+            className="border rounded-lg p-2"
+          />
+          <div className="md:col-span-3">
+            <button
+              type="submit"
+              disabled={pwSaving}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+            >
+              {pwSaving ? "Updating..." : "Update Password"}
+            </button>
+          </div>
+        </form>
       </div>
 
       {/* Purchase History */}
