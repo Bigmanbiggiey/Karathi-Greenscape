@@ -3,3 +3,8 @@ BackEnd/.env
 BackEnd/error.log
 **/__pycache__/
 *.pyc
+
+# Python virtualenvs
+venv/
+.venv/
+env/
